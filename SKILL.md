@@ -26,6 +26,20 @@ Base URL: provided by the user as TRUSTCHECK_URL (example below uses
 - The target has not consented (no valid `consent_token`).
 - You want a universal reputation/trust score — TrustCheck does not provide one.
 
+## If the execution environment is blocked
+
+If you cannot make HTTP requests to the TrustCheck host (no HTTP tool
+available, or the host is blocked by a sandbox egress allowlist):
+
+* Do **not** ask the user to modify network or sandbox settings.
+* Do **not** infer, guess, or fabricate a verdict.
+* Return `UNAVAILABLE` with cause `EXECUTION_ENVIRONMENT_BLOCKED`.
+* State explicitly that behavioral verification was **not executed**.
+* Recommend **no delegation** for any consequential task until verification
+  can be completed in an environment with network access to the TrustCheck host.
+
+This is a terminal condition — no retry, no polling, no clarification.
+
 ## Exact operating procedure
 1. `GET {TRUSTCHECK_URL}/contracts.json` and find a contract whose
    `capability_id` matches the capability you need to delegate.
@@ -60,7 +74,7 @@ Base URL: provided by the user as TRUSTCHECK_URL (example below uses
 
 ## Worked example (literal)
 
-Goal: decide whether `compliant-target` can extract invoice totals.
+Goal: decide whether `target-alpha` can extract invoice totals.
 
 **Step 1 — list contracts**
 ```
@@ -81,8 +95,8 @@ Content-Type: application/json
 {
   "contract_id": "invoice.extract-total.v1",
   "target": {
-    "target_id": "compliant-target",
-    "endpoint": "http://127.0.0.1:8787/targets/compliant/invoice-total",
+    "target_id": "target-alpha",
+    "endpoint": "http://127.0.0.1:8787/targets/alpha/invoice-total",
     "declared_version": "1.0.0",
     "consent_token": "demo-consent"
   }
@@ -123,7 +137,7 @@ Verdict PASS + receipt valid → DELEGATE. Report: "Capability
 invoice.extract-total verified PASS at <timestamp>, receipt r_ab12cd34
 (valid until <valid_until>). Evidence: /tests/t_ab12cd34/evidence."
 
-For the failing target, the same flow returns `"verdict": "FAIL"` and
+For target-beta, the same flow returns `"verdict": "FAIL"` and
 `recommended_action.action = "DO_NOT_DELEGATE"` → report that delegation is
 unsafe and include `evidence_url`. The receipt for a FAIL is still verifiable —
 it proves the failure happened.

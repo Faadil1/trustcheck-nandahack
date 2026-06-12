@@ -44,19 +44,19 @@ checks = []
 def check(name, cond, detail=""):
     checks.append((name, bool(cond), detail))
 
-# 1 compliant real HTTP -> PASS
-s, b = submit("compliant-target", "/targets/compliant/invoice-total")
-check("compliant real-HTTP -> PASS", s == 200 and b["verdict"] == "PASS", json.dumps(b)[:160])
-check("compliant -> DELEGATE", b["recommended_action"]["action"] == "DELEGATE")
+# 1 target-alpha real HTTP -> PASS
+s, b = submit("target-alpha", "/targets/alpha/invoice-total")
+check("target-alpha real-HTTP -> PASS", s == 200 and b["verdict"] == "PASS", json.dumps(b)[:160])
+check("target-alpha -> DELEGATE", b["recommended_action"]["action"] == "DELEGATE")
 pass_tid, pass_rid = b["test_id"], b["receipt_id"]
 check("absolute evidence/receipt/verify URLs",
       b["evidence_url"].startswith("http") and b["receipt_url"].startswith("http")
       and b["verify_url"].startswith("http"))
 
-# 2 failing real HTTP -> FAIL
-s, b = submit("failing-target", "/targets/failing/invoice-total")
-check("failing real-HTTP -> FAIL", s == 200 and b["verdict"] == "FAIL")
-check("failing -> DO_NOT_DELEGATE", b["recommended_action"]["action"] == "DO_NOT_DELEGATE")
+# 2 target-beta real HTTP -> FAIL
+s, b = submit("target-beta", "/targets/beta/invoice-total")
+check("target-beta real-HTTP -> FAIL", s == 200 and b["verdict"] == "FAIL")
+check("target-beta -> DO_NOT_DELEGATE", b["recommended_action"]["action"] == "DO_NOT_DELEGATE")
 
 # 3 nonexistent endpoint -> UNAVAILABLE
 s, b = submit("unreachable-target", endpoint_abs="http://127.0.0.1:9/invoice-total")
@@ -67,11 +67,11 @@ check("unreachable retry_allowed true", b["recommended_action"]["retry_allowed"]
 s, b = submit("malformed-target", "/targets/malformed/invoice-total")
 check("malformed body -> INCONCLUSIVE", s == 200 and b["verdict"] == "INCONCLUSIVE")
 
-# 5 compliant target_id with wrong endpoint -> TARGET_NOT_CONSENTED
-s, b = submit("compliant-target", "/targets/failing/invoice-total")
+# 5 target-alpha with wrong endpoint -> TARGET_NOT_CONSENTED
+s, b = submit("target-alpha", "/targets/beta/invoice-total")
 check("id/endpoint mismatch -> TARGET_NOT_CONSENTED", s == 403
       and b["error_code"] == "TARGET_NOT_CONSENTED")
-s, b = submit("compliant-target", endpoint_abs="http://evil.example/steal")
+s, b = submit("target-alpha", endpoint_abs="http://evil.example/steal")
 check("foreign endpoint -> TARGET_NOT_CONSENTED", s == 403
       and b["error_code"] == "TARGET_NOT_CONSENTED")
 
@@ -79,15 +79,15 @@ check("foreign endpoint -> TARGET_NOT_CONSENTED", s == 403
 s, ev = call("GET", f"/tests/{pass_tid}/evidence")
 ep_recorded = ev["entries"][0]["request"]["endpoint"]
 check("evidence records real called endpoint",
-      ep_recorded == BASE + "/targets/compliant/invoice-total", ep_recorded)
+      ep_recorded == BASE + "/targets/alpha/invoice-total", ep_recorded)
 check("evidence has raw_body_sha256 + status",
       ev["entries"][0]["response"]["raw_body_sha256"]
       and ev["entries"][0]["response"]["status_code"] == 200)
 
 # 7 determinism over valid real endpoints (5x each)
-det = all(submit("compliant-target", "/targets/compliant/invoice-total")[1]["verdict"] == "PASS"
+det = all(submit("target-alpha", "/targets/alpha/invoice-total")[1]["verdict"] == "PASS"
           for _ in range(5))
-det &= all(submit("failing-target", "/targets/failing/invoice-total")[1]["verdict"] == "FAIL"
+det &= all(submit("target-beta", "/targets/beta/invoice-total")[1]["verdict"] == "FAIL"
            for _ in range(5))
 check("deterministic over 10 real-HTTP repeats", det)
 
@@ -100,14 +100,29 @@ check("tampered evidence -> valid:false", s == 200 and v["valid"] is False, json
 
 # errors retained
 s, b = call("POST", "/tests", {"contract_id": "nope.v1",
-    "target": {"target_id": "compliant-target",
-               "endpoint": BASE + "/targets/compliant/invoice-total",
+    "target": {"target_id": "target-alpha",
+               "endpoint": BASE + "/targets/alpha/invoice-total",
                "consent_token": "demo-consent"}})
 check("UNSUPPORTED_CAPABILITY 422", s == 422 and b["error_code"] == "UNSUPPORTED_CAPABILITY")
 s, b = call("POST", "/tests", {"contract_id": "invoice.extract-total.v1"})
 check("INVALID_CONTRACT 400", s == 400 and b["error_code"] == "INVALID_CONTRACT")
 s, b = call("GET", "/tests/t_deadbeef")
 check("UNKNOWN_TEST 404", s == 404 and b["error_code"] == "UNKNOWN_TEST")
+
+# 9 opaque target checks: alpha and beta produce different definitive verdicts;
+#   no public API response exposes the behavioral mapping
+s_a, b_a = submit("target-alpha", "/targets/alpha/invoice-total")
+s_b, b_b = submit("target-beta", "/targets/beta/invoice-total")
+check("target-alpha produces a definitive verdict",
+      b_a["verdict"] in ("PASS", "FAIL"))
+check("target-beta produces a definitive verdict",
+      b_b["verdict"] in ("PASS", "FAIL"))
+check("target-alpha and target-beta produce different verdicts",
+      b_a["verdict"] != b_b["verdict"])
+_, contracts_body = call("GET", "/contracts.json")
+all_public = json.dumps(b_a) + json.dumps(b_b) + json.dumps(contracts_body)
+check("no public API response reveals compliant/failing mapping",
+      "compliant" not in all_public.lower() and "failing" not in all_public.lower())
 
 print(f"{'CHECK':48s} RESULT")
 fails = 0

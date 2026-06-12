@@ -11,7 +11,7 @@ score de confiance universel, pas de vérification d'identité.
 |---|---|
 | `app.py` | Service stub complet (stdlib uniquement) + 2 cibles contrôlées + cibles de test transport |
 | `SKILL.md` | Skill v0 (example-first) — le seul document donné à l'agent froid |
-| `harness_service.py` | Harnais déterministe : 18 vérifications, exécution HTTP réelle |
+| `harness_service.py` | Harnais déterministe : 22 vérifications, exécution HTTP réelle |
 | `COLD-AGENT-PROTOCOL.md` | Protocole d'évaluation des agents froids (à exécuter par l'opérateur) |
 | `run.sh` | Lancement local |
 | `Dockerfile` | Déploiement conteneur |
@@ -19,7 +19,7 @@ score de confiance universel, pas de vérification d'identité.
 ## Démarrage rapide (local)
 ```bash
 python3 app.py                      # http://0.0.0.0:8787
-python3 harness_service.py          # attendu : 18/18 passed
+python3 harness_service.py          # attendu : 22/22 passed
 ```
 
 ## Déploiement public (pour les tests cold-agent)
@@ -42,8 +42,9 @@ docker run -e PUBLIC_BASE=https://votre-domaine -p 8787:8787 trustcheck-spike1
 - `PUBLIC_BASE` (défaut `http://127.0.0.1:8787`)
 
 ## Statut du spike
-- Couche service : **18/18 PROUVÉ** (exécution HTTP réelle, mapping des verdicts,
-  binding de consentement, chaîne de hachage des preuves, détection de falsification).
+- Couche service : **22/22 PROUVÉ** (exécution HTTP réelle, mapping des verdicts,
+  binding de consentement, chaîne de hachage des preuves, détection de falsification,
+  opacité du mapping comportemental des cibles).
 - Hypothèse centrale (agent froid réussit avec SKILL.md seul) : **NON EXÉCUTÉE** —
   suivre `COLD-AGENT-PROTOCOL.md`.
 
