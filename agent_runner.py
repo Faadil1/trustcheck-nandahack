@@ -106,8 +106,31 @@ def main() -> int:
     doc=load_yaml(Path(a.scenarios)); BASE_URL=doc["trustcheck_url"].rstrip("/"); s=next(x for x in doc["scenarios"] if x["scenario_id"]==a.scenario)
     skill=Path(a.skill).read_text(encoding="utf-8")
     client=genai.Client(vertexai=True,project=a.project,location=a.location)
-    response=client.models.generate_content(model=a.model,contents=prompt(skill,s),config=types.GenerateContentConfig(temperature=0,system_instruction="Execute TrustCheck autonomously using tools. Do not ask questions.",tools=[trustcheck_get,trustcheck_post],automatic_function_calling=types.AutomaticFunctionCallingConfig(maximum_remote_calls=12)))
-    text=response.text or ""; ev=evaluate(s,text)
+    response=client.models.generate_content(model=a.model,contents=prompt(skill,s),config=types.GenerateContentConfig(
+    temperature=0,
+    system_instruction=(
+        "Execute the requested TrustCheck workflow autonomously. "
+        "You have working HTTP tools. "
+        "Do not claim the environment is blocked unless a tool call "
+        "returns a real network error. "
+        "You must begin by calling trustcheck_get for /contracts.json. "
+        "Then submit the test and verify its receipt. "
+        "Do not ask the user questions."
+    ),
+    tools=[trustcheck_get, trustcheck_post],
+    tool_config=types.ToolConfig(
+        function_calling_config=types.FunctionCallingConfig(
+            mode="ANY",
+            allowed_function_names=[
+                "trustcheck_get",
+                "trustcheck_post",
+            ],
+        )
+    ),
+    automatic_function_calling=types.AutomaticFunctionCallingConfig(
+        maximum_remote_calls=12
+    ),
+),
     run={"run_id":f"vertex-{a.model}-{a.scenario}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}","timestamp":now(),"agent":"Vertex AI Gemini controlled runner","model":a.model,"scenario":a.scenario,"fresh_session":True,"final_response":text,"tool_trace":TRACE,**ev}
     rp=Path(a.results); results=load_yaml(rp) if rp.exists() else {}; results=results or {}; results.setdefault("project","TrustCheck"); results.setdefault("spike","cold-agent-skill-validation"); results.setdefault("runs",[]); results["runs"].append(run); results["updated_at"]=now()
     counts={k:0 for k in ("SUCCESS","SKILL_FAILURE","ENVIRONMENT_BLOCKED")}
