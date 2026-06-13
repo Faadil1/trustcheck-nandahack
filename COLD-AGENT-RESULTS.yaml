@@ -1,0 +1,18 @@
+project: TrustCheck
+spike: cold-agent-skill-validation
+updated_at: null
+service:
+  local_harness: {status: PROVEN, checks_passed: 22, checks_total: 22}
+  cloud_run:
+    status: PROVEN
+    public_base: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app
+    health_endpoint: PASS
+    contracts_endpoint: PASS
+    target_alpha_receipt_valid: true
+    target_beta_receipt_valid: true
+cold_agent_summary: {success: 0, skill_failure: 0, environment_blocked: 4, required_success_runs: 6}
+runs:
+  - {run_id: claude-web-001, agent: Claude, scenario: legacy-failing-target, classification: ENVIRONMENT_BLOCKED, cause: NETWORK_EGRESS_ALLOWLIST}
+  - {run_id: claude-code-alpha-001, agent: Claude Code, scenario: target-alpha, classification: ENVIRONMENT_BLOCKED, cause: NETWORK_EGRESS_ALLOWLIST}
+  - {run_id: gemini-cli-alpha-001, agent: Gemini CLI, model: gemini-3-flash-preview, scenario: target-alpha, classification: ENVIRONMENT_BLOCKED, cause: MODEL_STALLED}
+  - {run_id: gemini-cli-alpha-002, agent: Gemini CLI, model: gemini-2.5, scenario: target-alpha, classification: ENVIRONMENT_BLOCKED, cause: MODEL_STALLED}

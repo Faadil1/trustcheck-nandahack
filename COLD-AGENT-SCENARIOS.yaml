@@ -1,0 +1,22 @@
+trustcheck_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app
+scenarios:
+  - scenario_id: alpha
+    visible:
+      target_id: target-alpha
+      endpoint: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/alpha/invoice-total
+      declared_version: "1.0.0"
+      consent_token: demo-consent
+      required_capability: invoice.extract-total
+    hidden_expected:
+      verdict: PASS
+      action: DELEGATE
+  - scenario_id: beta
+    visible:
+      target_id: target-beta
+      endpoint: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/beta/invoice-total
+      declared_version: "1.0.0"
+      consent_token: demo-consent
+      required_capability: invoice.extract-total
+    hidden_expected:
+      verdict: FAIL
+      action: DO_NOT_DELEGATE
