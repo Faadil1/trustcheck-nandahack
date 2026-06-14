@@ -85,8 +85,8 @@ Content-Type: application/json
 {
   "contract_id": "invoice.extract-total.v1",
   "target": {
-    "target_id": "compliant-target",
-    "endpoint": "http://127.0.0.1:8787/targets/compliant/invoice-total",
+    "target_id": "target-alpha",
+    "endpoint": "http://127.0.0.1:8787/targets/alpha/invoice-total",
     "declared_version": "1.0.0",
     "consent_token": "demo-consent"
   }

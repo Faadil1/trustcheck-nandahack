@@ -64,14 +64,14 @@ def ext_keystore_from_wellknown(wk):
 EXT = ext_keystore_from_wellknown(wk)
 
 # ---- Spike 1 behavioral checks (preserved) ----
-s, b = submit("compliant-target", "/targets/compliant/invoice-total")
+s, b = submit("target-alpha", "/targets/alpha/invoice-total")
 check("compliant -> PASS", s == 200 and b["verdict"] == "PASS", json.dumps(b)[:140])
 check("compliant -> DELEGATE", b["recommended_action"]["action"] == "DELEGATE")
 pass_rid = b["receipt_id"]
 check("result exposes key_id + key_endpoint",
       b.get("key_id") == app.KEYSTORE.active.key_id and "key_endpoint" in b)
 
-s, b = submit("failing-target", "/targets/failing/invoice-total")
+s, b = submit("target-beta", "/targets/beta/invoice-total")
 check("failing -> FAIL", s == 200 and b["verdict"] == "FAIL")
 check("failing -> DO_NOT_DELEGATE", b["recommended_action"]["action"] == "DO_NOT_DELEGATE")
 fail_rid = b["receipt_id"]
@@ -80,14 +80,14 @@ s, b = submit("unreachable-target", endpoint_abs="http://127.0.0.1:9/invoice-tot
 check("unreachable -> UNAVAILABLE", b["verdict"] == "UNAVAILABLE")
 s, b = submit("malformed-target", "/targets/malformed/invoice-total")
 check("malformed -> INCONCLUSIVE", b["verdict"] == "INCONCLUSIVE")
-s, b = submit("compliant-target", "/targets/failing/invoice-total")
+s, b = submit("target-alpha", "/targets/beta/invoice-total")
 check("id/endpoint mismatch -> 403", s == 403 and b["error_code"] == "TARGET_NOT_CONSENTED")
-s, b = submit("compliant-target", endpoint_abs="http://evil.example/x")
+s, b = submit("target-alpha", endpoint_abs="http://evil.example/x")
 check("foreign endpoint -> 403", s == 403 and b["error_code"] == "TARGET_NOT_CONSENTED")
 
 # determinism over real endpoints
-det = all(submit("compliant-target", "/targets/compliant/invoice-total")[1]["verdict"] == "PASS" for _ in range(5))
-det &= all(submit("failing-target", "/targets/failing/invoice-total")[1]["verdict"] == "FAIL" for _ in range(5))
+det = all(submit("target-alpha", "/targets/alpha/invoice-total")[1]["verdict"] == "PASS" for _ in range(5))
+det &= all(submit("target-beta", "/targets/beta/invoice-total")[1]["verdict"] == "FAIL" for _ in range(5))
 check("deterministic over 10 real-HTTP repeats", det)
 
 # ---- Spike 3: fetch full receipt, all required fields present + signed ----
@@ -168,7 +168,7 @@ app.KEYSTORE = rotated
 s, v = call("POST", f"/receipts/{fail_rid}/verify")
 check("old receipt verifies after rotation (key now previous)", v["valid"] is True, str(v))
 # new receipt uses the new active key
-s, b = submit("compliant-target", "/targets/compliant/invoice-total")
+s, b = submit("target-alpha", "/targets/alpha/invoice-total")
 check("post-rotation receipt uses new key_id", b["key_id"] == "tc-dev-2026-07-a")
 s, wk2 = call("GET", "/.well-known/trustcheck-key.json")
 check("well-known lists old key as previous",
@@ -195,8 +195,8 @@ check("private key never exposed via API", "private" not in json.dumps(wkx).lowe
 
 # legacy errors preserved
 s, b = call("POST", "/tests", {"contract_id": "nope.v1",
-    "target": {"target_id": "compliant-target",
-               "endpoint": BASE + "/targets/compliant/invoice-total",
+    "target": {"target_id": "target-alpha",
+               "endpoint": BASE + "/targets/alpha/invoice-total",
                "consent_token": "demo-consent"}})
 check("UNSUPPORTED_CAPABILITY 422", s == 422 and b["error_code"] == "UNSUPPORTED_CAPABILITY")
 s, b = call("GET", "/tests/t_deadbeef")

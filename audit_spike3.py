@@ -21,7 +21,7 @@ def call(m,p,b=None):
 audit=[]
 def A(name,cond,d=""): audit.append((name,bool(cond),d))
 
-s,b=call("POST","/tests",{"contract_id":"invoice.extract-total.v1","target":{"target_id":"compliant-target","endpoint":BASE+"/targets/compliant/invoice-total","declared_version":"1.0.0","consent_token":"demo-consent"}})
+s,b=call("POST","/tests",{"contract_id":"invoice.extract-total.v1","target":{"target_id":"target-alpha","endpoint":BASE+"/targets/alpha/invoice-total","declared_version":"1.0.0","consent_token":"demo-consent"}})
 s,receipt=call("GET","/receipts/"+b["receipt_id"])
 
 # 1 signing covers every security-relevant field: mutate EACH signed field -> invalid

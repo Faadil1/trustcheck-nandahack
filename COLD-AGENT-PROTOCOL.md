@@ -13,12 +13,12 @@
 1. The full SKILL.md file contents.
 2. "TRUSTCHECK_URL = <deployed URL>"
 3. Objective (Scenario 1, failing):
-   "Determine whether the service at <TRUSTCHECK_URL>/targets/failing/invoice-total
+   "Determine whether the service at <TRUSTCHECK_URL>/targets/beta/invoice-total
    (target_id: failing-target, declared_version 1.0.0, consent_token: demo-consent)
    can reliably extract an invoice total. Use TrustCheck and decide whether the
    task should be delegated."
 4. New fresh session, Scenario 2 (compliant): same text with
-   /targets/compliant/invoice-total and target_id compliant-target.
+   /targets/alpha/invoice-total and target_id compliant-target.
 
 Do NOT answer questions. If the agent asks anything, record it as a failure
 (unnecessary human clarification) and reply only: "Proceed using the skill."

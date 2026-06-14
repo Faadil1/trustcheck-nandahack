@@ -28,8 +28,8 @@ PUBLIC_BASE = os.getenv("PUBLIC_BASE", f"http://127.0.0.1:{PORT}")
 KEYSTORE = rcpt.load_keystore()
 
 ALLOWED_TARGETS = {
-    "compliant-target":   {"path": "/targets/compliant/invoice-total",  "consent_token": "demo-consent"},
-    "failing-target":     {"path": "/targets/failing/invoice-total",    "consent_token": "demo-consent"},
+    "target-alpha":   {"path": "/targets/alpha/invoice-total",  "consent_token": "demo-consent"},
+    "target-beta":     {"path": "/targets/beta/invoice-total",    "consent_token": "demo-consent"},
     "malformed-target":   {"path": "/targets/malformed/invoice-total",  "consent_token": "demo-consent"},
     "unreachable-target": {"endpoint": "http://127.0.0.1:9/invoice-total", "consent_token": "demo-consent"},
 }
@@ -282,11 +282,11 @@ class Handler(BaseHTTPRequestHandler):
         body, e = self._body()
         if e: return self._send(*e)
 
-        if p == "/targets/compliant/invoice-total":
+        if p == "/targets/alpha/invoice-total":
             inv = body.get("invoice", {})
             return self._send(200, {"currency": inv.get("currency"),
                 "total": round(float(inv.get("subtotal", 0)) + float(inv.get("tax", 0)), 2)})
-        if p == "/targets/failing/invoice-total":
+        if p == "/targets/beta/invoice-total":
             inv = body.get("invoice", {})
             return self._send(200, {"currency": inv.get("currency"),
                                     "total": float(inv.get("subtotal", 0))})
