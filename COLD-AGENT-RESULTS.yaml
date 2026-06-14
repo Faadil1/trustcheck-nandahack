@@ -1,8 +1,11 @@
 project: TrustCheck
 spike: cold-agent-skill-validation
-updated_at: null
+updated_at: '2026-06-14T01:12:00.165705+00:00'
 service:
-  local_harness: {status: PROVEN, checks_passed: 22, checks_total: 22}
+  local_harness:
+    status: PROVEN
+    checks_passed: 22
+    checks_total: 22
   cloud_run:
     status: PROVEN
     public_base: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app
@@ -10,9 +13,425 @@ service:
     contracts_endpoint: PASS
     target_alpha_receipt_valid: true
     target_beta_receipt_valid: true
-cold_agent_summary: {success: 0, skill_failure: 0, environment_blocked: 4, required_success_runs: 6}
+cold_agent_summary:
+  success: 0
+  skill_failure: 4
+  environment_blocked: 4
+  required_success_runs: 6
 runs:
-  - {run_id: claude-web-001, agent: Claude, scenario: legacy-failing-target, classification: ENVIRONMENT_BLOCKED, cause: NETWORK_EGRESS_ALLOWLIST}
-  - {run_id: claude-code-alpha-001, agent: Claude Code, scenario: target-alpha, classification: ENVIRONMENT_BLOCKED, cause: NETWORK_EGRESS_ALLOWLIST}
-  - {run_id: gemini-cli-alpha-001, agent: Gemini CLI, model: gemini-3-flash-preview, scenario: target-alpha, classification: ENVIRONMENT_BLOCKED, cause: MODEL_STALLED}
-  - {run_id: gemini-cli-alpha-002, agent: Gemini CLI, model: gemini-2.5, scenario: target-alpha, classification: ENVIRONMENT_BLOCKED, cause: MODEL_STALLED}
+- run_id: claude-web-001
+  agent: Claude
+  scenario: legacy-failing-target
+  classification: ENVIRONMENT_BLOCKED
+  cause: NETWORK_EGRESS_ALLOWLIST
+- run_id: claude-code-alpha-001
+  agent: Claude Code
+  scenario: target-alpha
+  classification: ENVIRONMENT_BLOCKED
+  cause: NETWORK_EGRESS_ALLOWLIST
+- run_id: gemini-cli-alpha-001
+  agent: Gemini CLI
+  model: gemini-3-flash-preview
+  scenario: target-alpha
+  classification: ENVIRONMENT_BLOCKED
+  cause: MODEL_STALLED
+- run_id: gemini-cli-alpha-002
+  agent: Gemini CLI
+  model: gemini-2.5
+  scenario: target-alpha
+  classification: ENVIRONMENT_BLOCKED
+  cause: MODEL_STALLED
+- run_id: vertex-gemini-2.5-flash-alpha-20260613T005342Z
+  timestamp: '2026-06-13T00:53:42.495521+00:00'
+  agent: Vertex AI Gemini controlled runner
+  model: gemini-2.5-flash
+  scenario: alpha
+  fresh_session: true
+  final_response: 'Capability: invoice.extract-total
+
+    Target: target-alpha
+
+    Target version: 1.0.0
+
+    Status: UNAVAILABLE
+
+    Verification executed: NO
+
+    Cause: EXECUTION_ENVIRONMENT_BLOCKED
+
+    Receipt verified: NO
+
+    Decision: DO_NOT_DELEGATE
+
+    Retry: Only in a different environment that already supports HTTP access.'
+  tool_trace: []
+  classification: SKILL_FAILURE
+  success: false
+  expected:
+    verdict: PASS
+    action: DELEGATE
+  observed:
+    verdict: null
+    recommended_action: null
+    receipt_valid: null
+  checks:
+    contracts_called: false
+    correct_contract_selected: false
+    valid_target_request: false
+    test_called: false
+    actual_verdict_correct: false
+    receipt_verify_called: false
+    receipt_valid: false
+    final_text_contains_status: false
+    final_text_contains_action: true
+    no_question_mark: true
+- run_id: vertex-gemini-2.5-flash-alpha-20260613T005424Z
+  timestamp: '2026-06-13T00:54:24.885089+00:00'
+  agent: Vertex AI Gemini controlled runner
+  model: gemini-2.5-flash
+  scenario: alpha
+  fresh_session: true
+  final_response: 'Status: UNAVAILABLE
+
+    Verification executed: NO
+
+    Cause: EXECUTION_ENVIRONMENT_BLOCKED
+
+    Receipt verified: NO
+
+    Decision: DO_NOT_DELEGATE
+
+    Retry: Only in a different environment that already supports HTTP access.'
+  tool_trace: []
+  classification: SKILL_FAILURE
+  success: false
+  expected:
+    verdict: PASS
+    action: DELEGATE
+  observed:
+    verdict: null
+    recommended_action: null
+    receipt_valid: null
+  checks:
+    contracts_called: false
+    correct_contract_selected: false
+    valid_target_request: false
+    test_called: false
+    actual_verdict_correct: false
+    receipt_verify_called: false
+    receipt_valid: false
+    final_text_contains_status: false
+    final_text_contains_action: true
+    no_question_mark: true
+- run_id: vertex-gemini-2.5-flash-alpha-20260613T231646Z
+  timestamp: '2026-06-13T23:16:46.675394+00:00'
+  agent: Vertex AI Gemini controlled runner
+  model: gemini-2.5-flash
+  scenario: alpha
+  fresh_session: true
+  final_response: 'Capability: invoice.extract-total
+
+    Target: target-alpha
+
+    Target version: 1.0.0
+
+    Status: UNAVAILABLE
+
+    Verification executed: NO
+
+    Cause: EXECUTION_ENVIRONMENT_BLOCKED
+
+    Receipt verified: NO
+
+    Decision: DO_NOT_DELEGATE
+
+    Retry: Only in a different environment that already supports HTTP access.'
+  tool_trace: []
+  classification: SKILL_FAILURE
+  success: false
+  expected:
+    verdict: PASS
+    action: DELEGATE
+  observed:
+    verdict: null
+    recommended_action: null
+    receipt_valid: null
+  checks:
+    contracts_called: false
+    correct_contract_selected: false
+    valid_target_request: false
+    test_called: false
+    actual_verdict_correct: false
+    receipt_verify_called: false
+    receipt_valid: false
+    final_text_contains_status: false
+    final_text_contains_action: true
+    no_question_mark: true
+- run_id: vertex-gemini-2.5-flash-alpha-20260614T004152Z
+  timestamp: '2026-06-14T00:41:52.682260+00:00'
+  agent: Vertex AI Gemini controlled runner
+  model: gemini-2.5-flash
+  scenario: alpha
+  fresh_session: true
+  final_response: 'Capability: invoice.extract-total
+
+    Target: target-alpha
+
+    Target version: 1.0.0
+
+    Status: UNAVAILABLE
+
+    Verification executed: NO
+
+    Cause: EXECUTION_ENVIRONMENT_BLOCKED
+
+    Receipt verified: NO
+
+    Decision: DO_NOT_DELEGATE
+
+    Retry: Only in a different environment that already supports HTTP access.'
+  tool_trace: []
+  classification: SKILL_FAILURE
+  success: false
+  expected:
+    verdict: PASS
+    action: DELEGATE
+  observed:
+    verdict: null
+    recommended_action: null
+    receipt_valid: null
+  checks:
+    contracts_called: false
+    correct_contract_selected: false
+    valid_target_request: false
+    test_called: false
+    actual_verdict_correct: false
+    receipt_verify_called: false
+    receipt_valid: false
+    final_text_contains_status: false
+    final_text_contains_action: true
+    no_question_mark: true
+- run_id: runner-v2-gemini-2.5-flash-alpha-20260614T011057Z
+  timestamp: '2026-06-14T01:10:57.274259+00:00'
+  agent: Gemini phased controlled runner v2
+  model: gemini-2.5-flash
+  scenario: alpha
+  fresh_session: true
+  classification: SUCCESS
+  success: true
+  expected:
+    verdict: PASS
+    action: DELEGATE
+  observed:
+    verdict: PASS
+    recommended_action: DELEGATE
+    receipt_valid: true
+  checks:
+    contracts_called: true
+    correct_contract_selected: true
+    valid_target_request: true
+    test_called: true
+    actual_verdict_correct: true
+    receipt_verify_called: true
+    receipt_valid: true
+    final_text_contains_status: true
+    final_text_contains_action: true
+    no_question_mark: true
+  final_response: 'Capability: invoice.extract-total
+
+    Target: target-alpha
+
+    Target version: 1.0.0
+
+    Status: PASS
+
+    Verification executed: YES
+
+    Receipt verified: YES
+
+    Receipt ID: r_76e15eb7
+
+    Evidence URL: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_76e15eb7/evidence
+
+    Valid until: 2026-06-15T01:10:50.814581+00:00
+
+    Decision: DELEGATE
+
+    Reason: All required predicates passed.'
+  tool_trace:
+  - ok: true
+    method: GET
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json
+    status: 200
+    data:
+      contracts:
+      - contract_id: invoice.extract-total.v1
+        capability_id: invoice.extract-total
+        method: POST
+        request_template:
+          invoice: '{{input.invoice}}'
+        canaries:
+        - input:
+            invoice:
+              subtotal: 110.0
+              tax: 13.45
+              currency: CAD
+          predicates:
+          - type: equals
+            path: $.currency
+            expected: CAD
+          - type: equals
+            path: $.total
+            expected: 123.45
+          - type: status_code
+            expected: 200
+        runs_per_canary: 3
+        pass_threshold: 1.0
+        timeout_ms: 5000
+        validity_hours: 24
+    latency_ms: 207.7
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests
+    status: 200
+    data:
+      test_id: t_76e15eb7
+      status: complete
+      capability_id: invoice.extract-total
+      verdict: PASS
+      recommended_action:
+        action: DELEGATE
+        reason: All required predicates passed.
+        retry_allowed: false
+      runs: 3
+      latency_ms:
+        p50: 30.72
+        max: 64.62
+      receipt_id: r_76e15eb7
+      evidence_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_76e15eb7/evidence
+      receipt_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_76e15eb7
+      verify_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_76e15eb7/verify
+      valid_until: '2026-06-15T01:10:50.814581+00:00'
+    latency_ms: 300.93
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_76e15eb7/verify
+    status: 200
+    data:
+      receipt_id: r_76e15eb7
+      valid: true
+      verification_scope: server-side HMAC + evidence hash chain (spike)
+      reasons: []
+    latency_ms: 163.9
+- run_id: runner-v2-gemini-2.5-flash-beta-20260614T011200Z
+  timestamp: '2026-06-14T01:12:00.141874+00:00'
+  agent: Gemini phased controlled runner v2
+  model: gemini-2.5-flash
+  scenario: beta
+  fresh_session: true
+  classification: SUCCESS
+  success: true
+  expected:
+    verdict: FAIL
+    action: DO_NOT_DELEGATE
+  observed:
+    verdict: FAIL
+    recommended_action: DO_NOT_DELEGATE
+    receipt_valid: true
+  checks:
+    contracts_called: true
+    correct_contract_selected: true
+    valid_target_request: true
+    test_called: true
+    actual_verdict_correct: true
+    receipt_verify_called: true
+    receipt_valid: true
+    final_text_contains_status: true
+    final_text_contains_action: true
+    no_question_mark: true
+  final_response: 'Capability: invoice.extract-total
+
+    Target: target-beta
+
+    Target version: 1.0.0
+
+    Status: FAIL
+
+    Verification executed: YES
+
+    Receipt verified: YES
+
+    Receipt ID: r_f0e8482f
+
+    Evidence URL: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_f0e8482f/evidence
+
+    Valid until: 2026-06-15T01:11:55.832291+00:00
+
+    Decision: DO_NOT_DELEGATE
+
+    Reason: Returned output did not satisfy the contract.'
+  tool_trace:
+  - ok: true
+    method: GET
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json
+    status: 200
+    data:
+      contracts:
+      - contract_id: invoice.extract-total.v1
+        capability_id: invoice.extract-total
+        method: POST
+        request_template:
+          invoice: '{{input.invoice}}'
+        canaries:
+        - input:
+            invoice:
+              subtotal: 110.0
+              tax: 13.45
+              currency: CAD
+          predicates:
+          - type: equals
+            path: $.currency
+            expected: CAD
+          - type: equals
+            path: $.total
+            expected: 123.45
+          - type: status_code
+            expected: 200
+        runs_per_canary: 3
+        pass_threshold: 1.0
+        timeout_ms: 5000
+        validity_hours: 24
+    latency_ms: 206.05
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests
+    status: 200
+    data:
+      test_id: t_f0e8482f
+      status: complete
+      capability_id: invoice.extract-total
+      verdict: FAIL
+      recommended_action:
+        action: DO_NOT_DELEGATE
+        reason: Returned output did not satisfy the contract.
+        retry_allowed: false
+      runs: 3
+      latency_ms:
+        p50: 30.51
+        max: 30.77
+      receipt_id: r_f0e8482f
+      evidence_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_f0e8482f/evidence
+      receipt_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_f0e8482f
+      verify_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_f0e8482f/verify
+      valid_until: '2026-06-15T01:11:55.832291+00:00'
+    latency_ms: 256.15
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_f0e8482f/verify
+    status: 200
+    data:
+      receipt_id: r_f0e8482f
+      valid: true
+      verification_scope: server-side HMAC + evidence hash chain (spike)
+      reasons: []
+    latency_ms: 160.99
