@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import time
@@ -14,6 +15,8 @@ from typing import Any
 import yaml
 from google import genai
 from google.genai import types
+
+import receipts as rcpt
 
 BASE_URL = ""
 TRACE: list[dict[str, Any]] = []
@@ -30,7 +33,7 @@ def safe_url(value: str) -> str:
     parsed = urllib.parse.urlparse(value)
     if parsed.scheme != "https" or parsed.netloc != base.netloc:
         raise ValueError("Only the configured TrustCheck HTTPS host is allowed.")
-    allowed = ("/contracts.json", "/tests", "/receipts/")
+    allowed = ("/contracts.json", "/tests", "/receipts/", "/.well-known/trustcheck-key.json")
     if not any(parsed.path == p or parsed.path.startswith(p) for p in allowed):
         raise ValueError(f"Path not allowed: {parsed.path}")
     return value
@@ -158,7 +161,18 @@ SKILL.md:
         forced_name="trustcheck_get",
     )
     _, a1 = extract_call(r1)
-    contracts = http_call("GET", a1["path_or_url"])
+    requested_contract_path = a1.get("path_or_url")
+
+    if requested_contract_path not in (
+        "/contracts.json",
+        BASE_URL + "/contracts.json",
+    ):
+        print(
+            "Phase 1 normalization: ignoring model-supplied URL:",
+            requested_contract_path,
+        )
+
+    contracts = http_call("GET", "/contracts.json")
 
     def submit_trustcheck_test(
         contract_id: str,
@@ -209,27 +223,92 @@ SKILL.md:
     }
     test_result = http_call("POST", "/tests", submitted_body)
 
-    def verify_trustcheck_receipt(verify_url: str) -> dict[str, Any]:
-        """Verify a TrustCheck receipt using the exact absolute verify URL."""
+    def fetch_trustcheck_receipt(receipt_url: str) -> dict[str, Any]:
+        """Fetch the exact TrustCheck receipt URL returned by POST /tests."""
         return {}
 
     r3 = call_model(
         client,
         args.model,
         f"""Using the SKILL and actual TrustCheck result below, your only next
-action is to call verify_trustcheck_receipt with the exact verify_url returned
-by TrustCheck. Do not return prose.
+action is to call fetch_trustcheck_receipt with the exact receipt_url returned
+by TrustCheck. Do not call the server-side verify endpoint. Do not return prose.
 
 TRUSTCHECK RESULT:
 {json.dumps(test_result, ensure_ascii=False)}
 
 SKILL.md:
 {skill}""",
-        tools=[verify_trustcheck_receipt],
-        forced_name="verify_trustcheck_receipt",
+        tools=[fetch_trustcheck_receipt],
+        forced_name="fetch_trustcheck_receipt",
     )
     _, a3 = extract_call(r3)
-    verify_result = http_call("POST", a3["verify_url"], {})
+    receipt_result = http_call("GET", a3["receipt_url"])
+    receipt = receipt_result.get("data", {})
+
+    def fetch_trustcheck_public_keys(key_endpoint: str) -> dict[str, Any]:
+        """Fetch the exact TrustCheck well-known public-key endpoint."""
+        return {}
+
+    r4 = call_model(
+        client,
+        args.model,
+        f"""Using the SKILL and actual TrustCheck result below, your only next
+action is to call fetch_trustcheck_public_keys with the exact key_endpoint
+returned by TrustCheck. Do not return prose.
+
+TRUSTCHECK RESULT:
+{json.dumps(test_result, ensure_ascii=False)}
+
+SKILL.md:
+{skill}""",
+        tools=[fetch_trustcheck_public_keys],
+        forced_name="fetch_trustcheck_public_keys",
+    )
+    _, a4 = extract_call(r4)
+    key_result = http_call("GET", a4["key_endpoint"])
+    well_known = key_result.get("data", {})
+
+    def find_key(doc, kid):
+        active = doc.get("active_key") or {}
+        if active.get("kid") == kid:
+            return active.get("x"), "active"
+        for item in doc.get("previous_keys") or []:
+            if item.get("kid") == kid:
+                return item.get("x"), "previous"
+        for item in doc.get("revoked_keys") or []:
+            if item.get("kid") == kid:
+                return item.get("x"), "revoked"
+        return None, "unknown"
+
+    pub, key_status = find_key(well_known, receipt.get("key_id"))
+    if pub:
+        independent_result = rcpt.verify_receipt(
+            receipt,
+            public_b64u=pub,
+            allow_revoked=False,
+        )
+        independent_result["key_status"] = key_status
+        if key_status == "revoked":
+            independent_result["valid"] = False
+            independent_result.setdefault("reasons", []).append("key is revoked")
+    else:
+        independent_result = {
+            "valid": False,
+            "reasons": [f"unknown key_id {receipt.get('key_id')!r}"],
+            "key_status": key_status,
+        }
+
+    tampered = copy.deepcopy(receipt)
+    tampered["verdict"] = "FAIL" if receipt.get("verdict") == "PASS" else "PASS"
+    if pub:
+        tampered_result = rcpt.verify_receipt(
+            tampered,
+            public_b64u=pub,
+            allow_revoked=False,
+        )
+    else:
+        tampered_result = {"valid": False, "reasons": ["no public key"]}
 
     final = call_model(
         client,
@@ -243,15 +322,23 @@ VISIBLE SCENARIO:
 ACTUAL TEST RESULT:
 {json.dumps(test_result, ensure_ascii=False)}
 
-ACTUAL RECEIPT VERIFICATION:
-{json.dumps(verify_result, ensure_ascii=False)}
+ACTUAL RECEIPT:
+{json.dumps(receipt, ensure_ascii=False)}
+
+INDEPENDENT ED25519 VERIFICATION:
+{json.dumps(independent_result, ensure_ascii=False)}
+
+TAMPERED RECEIPT NEGATIVE CONTROL:
+{json.dumps(tampered_result, ensure_ascii=False)}
+
+The final decision is permitted only if the authentic receipt passes independent
+Ed25519 verification. The tampered receipt must be rejected.
 
 SKILL.md:
 {skill}""",
     ).text or ""
 
     test_data = test_result.get("data", {})
-    verify_data = verify_result.get("data", {})
     submitted = submitted_body
     target = submitted.get("target") or {}
 
@@ -266,8 +353,17 @@ SKILL.md:
         ),
         "test_called": test_result.get("ok") is True,
         "actual_verdict_correct": test_data.get("verdict") == expected["verdict"],
-        "receipt_verify_called": verify_result.get("ok") is True,
-        "receipt_valid": verify_data.get("valid") is True,
+        "receipt_downloaded": receipt_result.get("ok") is True,
+        "well_known_key_downloaded": key_result.get("ok") is True,
+        "issuer_matches_public_base": well_known.get("issuer") == BASE_URL,
+        "receipt_key_id_matches_test": receipt.get("key_id") == test_data.get("key_id"),
+        "independent_signature_valid": independent_result.get("valid") is True,
+        "tampered_receipt_rejected": tampered_result.get("valid") is False,
+        "server_verify_endpoint_not_used": not any(
+            item.get("method") == "POST"
+            and urllib.parse.urlparse(item.get("url", "")).path.endswith("/verify")
+            for item in TRACE
+        ),
         "final_text_contains_status": expected["verdict"] in final,
         "final_text_contains_action": expected["action"] in final,
         "no_question_mark": "?" not in final,
@@ -276,9 +372,9 @@ SKILL.md:
     classification = "SUCCESS" if success else "SKILL_FAILURE"
 
     run = {
-        "run_id": f"runner-v2-{args.model}-{args.scenario}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
+        "run_id": f"runner-v4-{args.model}-{args.scenario}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
         "timestamp": now(),
-        "agent": "Gemini phased controlled runner v2",
+        "agent": "Gemini phased independent-Ed25519 runner v4",
         "model": args.model,
         "scenario": args.scenario,
         "fresh_session": True,
@@ -288,7 +384,10 @@ SKILL.md:
         "observed": {
             "verdict": test_data.get("verdict"),
             "recommended_action": (test_data.get("recommended_action") or {}).get("action"),
-            "receipt_valid": verify_data.get("valid"),
+            "receipt_id": receipt.get("receipt_id"),
+            "key_id": receipt.get("key_id"),
+            "independent_signature_valid": independent_result.get("valid"),
+            "tampered_receipt_valid": tampered_result.get("valid"),
         },
         "checks": checks,
         "final_response": final,
@@ -304,7 +403,7 @@ SKILL.md:
         encoding="utf-8",
     )
 
-    trace = Path(f"run-v2-{args.scenario}-{int(time.time())}.json")
+    trace = Path(f"run-v4-{args.scenario}-{int(time.time())}.json")
     trace.write_text(json.dumps(run, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print("=== FINAL MODEL RESPONSE ===")
