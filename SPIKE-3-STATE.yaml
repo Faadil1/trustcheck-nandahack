@@ -1,0 +1,89 @@
+spike: 3
+title: Publicly Verifiable Ed25519 Receipts
+status: PROVEN          # implementation + tamper tests executed and passing
+date: 2026-06-13
+depends_on:
+  spike_1: PROVEN_WITH_CONTROLLED_ORCHESTRATION   # not modified by Spike 3
+
+architecture_decision:
+  signing: Ed25519 via `cryptography` (well-maintained, minimal, standard)
+  rejected_alternatives:
+    - PyNaCl (extra dep, not installed)
+    - pure-python ed25519 (unaudited, slow)
+  authoritative_verification: Ed25519 (independent, no server secret)
+  legacy_hmac: retained as `hmac_signature_DEPRECATED`, compat only, not authoritative
+
+canonicalization:
+  version: tc-canon-1
+  rule: JSON, sorted keys, separators (",",":"), ensure_ascii=False (UTF-8)
+  signed_message: canonical bytes of the 15 signed fields (signature excluded)
+
+signed_fields:
+  - receipt_id
+  - test_id
+  - contract_id
+  - capability_id
+  - target_id
+  - target_endpoint
+  - declared_version
+  - verdict
+  - recommended_action
+  - evidence_root_hash
+  - issued_at
+  - valid_until
+  - key_id
+  - signature_algorithm
+  - canonicalization_version
+detached_field: signature   # base64url Ed25519 over canonical signed message
+
+key_endpoint:
+  path: /.well-known/trustcheck-key.json
+  fields: [issuer, canonicalization_version, signature_algorithm, active_key, previous_keys, revoked_keys]
+  jwk: {kty: OKP, crv: Ed25519, x: <b64u pub>, kid: <key_id>, status: active|previous|revoked}
+  env_confusion_guard: issuer == PUBLIC_BASE (binds key doc to its environment)
+
+key_rotation:
+  key_id_format: "tc-<env>-<YYYY-MM>-<seq>"   # e.g. tc-dev-2026-06-a
+  active: signs new receipts
+  previous: verify-only; receipts issued before rotation still verify
+  revoked: verification rejected by default (key_status=revoked)
+  process:
+    - generate new keypair, load as active via env/secret
+    - demote old active to previous (publish under previous_keys)
+    - receipts already issued remain valid (verified by previous key)
+    - to revoke: move key to revoked set; dependent receipts become invalid
+  validity_during_rotation: preserved for previous keys; broken for revoked keys
+
+key_loading:
+  precedence:
+    1: TRUSTCHECK_KEYS_FILE (json file, secret-mounted)
+    2: TRUSTCHECK_ACTIVE_PRIVATE_B64U + TRUSTCHECK_ACTIVE_KEY_ID (+ optional prev/revoked)
+    3: keys/dev-keys.json (LOCAL DEV ONLY)
+  production_rule: private key from env/secret file; never hardcoded; never served
+
+tests:
+  harness_service.py: 33/33 PASS (executed)
+  audit_spike3.py: 6/6 audit properties PASS (executed)
+  tamper_matrix: "[verdict, target, evidence_hash, validity, signature, wrong_key, unknown_key_id] all -> invalid"
+  rotation: "old receipt verifies post-rotation; new receipt uses new key_id; revoked -> invalid"
+  evidence_store_tamper: "detected (evidence_root recomputed from content at verify)"
+  independent_verification: "receipt + public key only (no server secret) PASS"
+  preserved_scenarios: "PASS/FAIL/INCONCLUSIVE/UNAVAILABLE + consent binding intact"
+
+security_limitations:
+  - Issuer authenticity depends on trusting the key published at /.well-known
+    (TLS + out-of-band key pinning recommended; no PKI/transparency log yet).
+  - Revocation is server-asserted; no distributed revocation/transparency log.
+  - In-memory store (no DB); evidence persistence not part of this spike.
+  - Ed25519 only; no algorithm agility beyond canonicalization_version bump.
+  - Independent verifier must support tc-canon-1 byte-exactly.
+
+deployment:
+  cloud_run: compatible (env-based keys, PUBLIC_BASE, single container)
+  public_base: unchanged behavior; also drives key_endpoint + absolute URLs
+
+not_changed:
+  - no universal trust score
+  - no identity verification
+  - consent binding unchanged
+  - Spike 1 evidence files unchanged (only referenced as completed)
