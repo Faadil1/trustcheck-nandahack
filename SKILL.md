@@ -1,8 +1,4 @@
 ---
-name: trustcheck
-description: Behaviorally verify that a target agent or service can actually perform ONE declared capability before delegating a consequential task to it. Use when you are about to delegate real work to an unverified target and a published TrustCheck contract exists for that capability. Returns PASS / FAIL / INCONCLUSIVE / UNAVAILABLE plus a signed, replayable evidence receipt.
----
----
 
 name: trustcheck
 description: Behaviorally verify whether a consented target agent or service can perform one declared capability before delegating consequential work. Use when a compatible published TrustCheck contract exists. Returns PASS, FAIL, INCONCLUSIVE, or UNAVAILABLE with an independently verifiable Ed25519 evidence receipt.
