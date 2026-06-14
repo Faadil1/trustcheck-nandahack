@@ -161,7 +161,18 @@ SKILL.md:
         forced_name="trustcheck_get",
     )
     _, a1 = extract_call(r1)
-    contracts = http_call("GET", a1["path_or_url"])
+    requested_contract_path = a1.get("path_or_url")
+
+    if requested_contract_path not in (
+        "/contracts.json",
+        BASE_URL + "/contracts.json",
+    ):
+        print(
+            "Phase 1 normalization: ignoring model-supplied URL:",
+            requested_contract_path,
+        )
+
+    contracts = http_call("GET", "/contracts.json")
 
     def submit_trustcheck_test(
         contract_id: str,
