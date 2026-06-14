@@ -1,6 +1,6 @@
 project: TrustCheck
 spike: cold-agent-skill-validation
-updated_at: '2026-06-14T01:12:00.165705+00:00'
+updated_at: '2026-06-14T01:21:48.977155+00:00'
 service:
   local_harness:
     status: PROVEN
@@ -435,3 +435,563 @@ runs:
       verification_scope: server-side HMAC + evidence hash chain (spike)
       reasons: []
     latency_ms: 160.99
+- run_id: runner-v2-gemini-2.5-pro-alpha-20260614T011853Z
+  timestamp: '2026-06-14T01:18:53.311252+00:00'
+  agent: Gemini phased controlled runner v2
+  model: gemini-2.5-pro
+  scenario: alpha
+  fresh_session: true
+  classification: SUCCESS
+  success: true
+  expected:
+    verdict: PASS
+    action: DELEGATE
+  observed:
+    verdict: PASS
+    recommended_action: DELEGATE
+    receipt_valid: true
+  checks:
+    contracts_called: true
+    correct_contract_selected: true
+    valid_target_request: true
+    test_called: true
+    actual_verdict_correct: true
+    receipt_verify_called: true
+    receipt_valid: true
+    final_text_contains_status: true
+    final_text_contains_action: true
+    no_question_mark: true
+  final_response: 'Capability: invoice.extract-total
+
+    Target: target-alpha
+
+    Target version: 1.0.0
+
+    Status: PASS
+
+    Verification executed: YES
+
+    Receipt verified: YES
+
+    Receipt ID: r_3c9a5419
+
+    Evidence URL: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_3c9a5419/evidence
+
+    Valid until: 2026-06-15T01:18:32.794535+00:00
+
+    Decision: DELEGATE
+
+    Reason: All required predicates passed.'
+  tool_trace:
+  - ok: true
+    method: GET
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json
+    status: 200
+    data:
+      contracts:
+      - contract_id: invoice.extract-total.v1
+        capability_id: invoice.extract-total
+        method: POST
+        request_template:
+          invoice: '{{input.invoice}}'
+        canaries:
+        - input:
+            invoice:
+              subtotal: 110.0
+              tax: 13.45
+              currency: CAD
+          predicates:
+          - type: equals
+            path: $.currency
+            expected: CAD
+          - type: equals
+            path: $.total
+            expected: 123.45
+          - type: status_code
+            expected: 200
+        runs_per_canary: 3
+        pass_threshold: 1.0
+        timeout_ms: 5000
+        validity_hours: 24
+    latency_ms: 81.33
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests
+    status: 200
+    data:
+      test_id: t_3c9a5419
+      status: complete
+      capability_id: invoice.extract-total
+      verdict: PASS
+      recommended_action:
+        action: DELEGATE
+        reason: All required predicates passed.
+        retry_allowed: false
+      runs: 3
+      latency_ms:
+        p50: 30.54
+        max: 62.01
+      receipt_id: r_3c9a5419
+      evidence_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_3c9a5419/evidence
+      receipt_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_3c9a5419
+      verify_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_3c9a5419/verify
+      valid_until: '2026-06-15T01:18:32.794535+00:00'
+    latency_ms: 287.79
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_3c9a5419/verify
+    status: 200
+    data:
+      receipt_id: r_3c9a5419
+      valid: true
+      verification_scope: server-side HMAC + evidence hash chain (spike)
+      reasons: []
+    latency_ms: 162.21
+- run_id: runner-v2-gemini-2.5-flash-lite-alpha-20260614T012007Z
+  timestamp: '2026-06-14T01:20:07.059540+00:00'
+  agent: Gemini phased controlled runner v2
+  model: gemini-2.5-flash-lite
+  scenario: alpha
+  fresh_session: true
+  classification: SUCCESS
+  success: true
+  expected:
+    verdict: PASS
+    action: DELEGATE
+  observed:
+    verdict: PASS
+    recommended_action: DELEGATE
+    receipt_valid: true
+  checks:
+    contracts_called: true
+    correct_contract_selected: true
+    valid_target_request: true
+    test_called: true
+    actual_verdict_correct: true
+    receipt_verify_called: true
+    receipt_valid: true
+    final_text_contains_status: true
+    final_text_contains_action: true
+    no_question_mark: true
+  final_response: 'Status: PASS
+
+    Verification executed: YES
+
+    Receipt verified: YES
+
+    Capability: invoice.extract-total
+
+    Target: target-alpha
+
+    Target version: 1.0.0
+
+    Receipt ID: r_5e43110d
+
+    Evidence URL: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_5e43110d/evidence
+
+    Valid until: 2026-06-15T01:20:05.387036+00:00
+
+    Decision: DELEGATE
+
+    Reason: All required predicates passed.'
+  tool_trace:
+  - ok: true
+    method: GET
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json
+    status: 200
+    data:
+      contracts:
+      - contract_id: invoice.extract-total.v1
+        capability_id: invoice.extract-total
+        method: POST
+        request_template:
+          invoice: '{{input.invoice}}'
+        canaries:
+        - input:
+            invoice:
+              subtotal: 110.0
+              tax: 13.45
+              currency: CAD
+          predicates:
+          - type: equals
+            path: $.currency
+            expected: CAD
+          - type: equals
+            path: $.total
+            expected: 123.45
+          - type: status_code
+            expected: 200
+        runs_per_canary: 3
+        pass_threshold: 1.0
+        timeout_ms: 5000
+        validity_hours: 24
+    latency_ms: 206.49
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests
+    status: 200
+    data:
+      test_id: t_5e43110d
+      status: complete
+      capability_id: invoice.extract-total
+      verdict: PASS
+      recommended_action:
+        action: DELEGATE
+        reason: All required predicates passed.
+        retry_allowed: false
+      runs: 3
+      latency_ms:
+        p50: 34.09
+        max: 35.68
+      receipt_id: r_5e43110d
+      evidence_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_5e43110d/evidence
+      receipt_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_5e43110d
+      verify_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_5e43110d/verify
+      valid_until: '2026-06-15T01:20:05.387036+00:00'
+    latency_ms: 263.36
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_5e43110d/verify
+    status: 200
+    data:
+      receipt_id: r_5e43110d
+      valid: true
+      verification_scope: server-side HMAC + evidence hash chain (spike)
+      reasons: []
+    latency_ms: 161.51
+- run_id: runner-v2-gemini-2.5-flash-lite-beta-20260614T012012Z
+  timestamp: '2026-06-14T01:20:12.211138+00:00'
+  agent: Gemini phased controlled runner v2
+  model: gemini-2.5-flash-lite
+  scenario: beta
+  fresh_session: true
+  classification: SUCCESS
+  success: true
+  expected:
+    verdict: FAIL
+    action: DO_NOT_DELEGATE
+  observed:
+    verdict: FAIL
+    recommended_action: DO_NOT_DELEGATE
+    receipt_valid: true
+  checks:
+    contracts_called: true
+    correct_contract_selected: true
+    valid_target_request: true
+    test_called: true
+    actual_verdict_correct: true
+    receipt_verify_called: true
+    receipt_valid: true
+    final_text_contains_status: true
+    final_text_contains_action: true
+    no_question_mark: true
+  final_response: 'Status: FAIL
+
+    Verification executed: YES
+
+    Receipt verified: YES
+
+    Capability: invoice.extract-total
+
+    Target: target-beta
+
+    Target version: 1.0.0
+
+    Receipt ID: r_d3d10dc8
+
+    Evidence URL: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_d3d10dc8/evidence
+
+    Valid until: 2026-06-15T01:20:10.577090+00:00
+
+    Decision: DO_NOT_DELEGATE
+
+    Reason: Returned output did not satisfy the contract.'
+  tool_trace:
+  - ok: true
+    method: GET
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json
+    status: 200
+    data:
+      contracts:
+      - contract_id: invoice.extract-total.v1
+        capability_id: invoice.extract-total
+        method: POST
+        request_template:
+          invoice: '{{input.invoice}}'
+        canaries:
+        - input:
+            invoice:
+              subtotal: 110.0
+              tax: 13.45
+              currency: CAD
+          predicates:
+          - type: equals
+            path: $.currency
+            expected: CAD
+          - type: equals
+            path: $.total
+            expected: 123.45
+          - type: status_code
+            expected: 200
+        runs_per_canary: 3
+        pass_threshold: 1.0
+        timeout_ms: 5000
+        validity_hours: 24
+    latency_ms: 198.37
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests
+    status: 200
+    data:
+      test_id: t_d3d10dc8
+      status: complete
+      capability_id: invoice.extract-total
+      verdict: FAIL
+      recommended_action:
+        action: DO_NOT_DELEGATE
+        reason: Returned output did not satisfy the contract.
+        retry_allowed: false
+      runs: 3
+      latency_ms:
+        p50: 30.37
+        max: 31.9
+      receipt_id: r_d3d10dc8
+      evidence_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_d3d10dc8/evidence
+      receipt_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_d3d10dc8
+      verify_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_d3d10dc8/verify
+      valid_until: '2026-06-15T01:20:10.577090+00:00'
+    latency_ms: 256.58
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_d3d10dc8/verify
+    status: 200
+    data:
+      receipt_id: r_d3d10dc8
+      valid: true
+      verification_scope: server-side HMAC + evidence hash chain (spike)
+      reasons: []
+    latency_ms: 161.74
+- run_id: runner-v2-gemini-2.5-pro-alpha-20260614T012123Z
+  timestamp: '2026-06-14T01:21:23.455055+00:00'
+  agent: Gemini phased controlled runner v2
+  model: gemini-2.5-pro
+  scenario: alpha
+  fresh_session: true
+  classification: SUCCESS
+  success: true
+  expected:
+    verdict: PASS
+    action: DELEGATE
+  observed:
+    verdict: PASS
+    recommended_action: DELEGATE
+    receipt_valid: true
+  checks:
+    contracts_called: true
+    correct_contract_selected: true
+    valid_target_request: true
+    test_called: true
+    actual_verdict_correct: true
+    receipt_verify_called: true
+    receipt_valid: true
+    final_text_contains_status: true
+    final_text_contains_action: true
+    no_question_mark: true
+  final_response: 'Capability: invoice.extract-total
+
+    Target: target-alpha
+
+    Target version: 1.0.0
+
+    Status: PASS
+
+    Verification executed: YES
+
+    Receipt verified: YES
+
+    Receipt ID: r_7e21a29e
+
+    Evidence URL: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_7e21a29e/evidence
+
+    Valid until: 2026-06-15T01:21:03.832758+00:00
+
+    Decision: DELEGATE
+
+    Reason: All required predicates passed.'
+  tool_trace:
+  - ok: true
+    method: GET
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json
+    status: 200
+    data:
+      contracts:
+      - contract_id: invoice.extract-total.v1
+        capability_id: invoice.extract-total
+        method: POST
+        request_template:
+          invoice: '{{input.invoice}}'
+        canaries:
+        - input:
+            invoice:
+              subtotal: 110.0
+              tax: 13.45
+              currency: CAD
+          predicates:
+          - type: equals
+            path: $.currency
+            expected: CAD
+          - type: equals
+            path: $.total
+            expected: 123.45
+          - type: status_code
+            expected: 200
+        runs_per_canary: 3
+        pass_threshold: 1.0
+        timeout_ms: 5000
+        validity_hours: 24
+    latency_ms: 91.64
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests
+    status: 200
+    data:
+      test_id: t_7e21a29e
+      status: complete
+      capability_id: invoice.extract-total
+      verdict: PASS
+      recommended_action:
+        action: DELEGATE
+        reason: All required predicates passed.
+        retry_allowed: false
+      runs: 3
+      latency_ms:
+        p50: 31.75
+        max: 33.43
+      receipt_id: r_7e21a29e
+      evidence_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_7e21a29e/evidence
+      receipt_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_7e21a29e
+      verify_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_7e21a29e/verify
+      valid_until: '2026-06-15T01:21:03.832758+00:00'
+    latency_ms: 256.52
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_7e21a29e/verify
+    status: 200
+    data:
+      receipt_id: r_7e21a29e
+      valid: true
+      verification_scope: server-side HMAC + evidence hash chain (spike)
+      reasons: []
+    latency_ms: 159.83
+- run_id: runner-v2-gemini-2.5-pro-beta-20260614T012148Z
+  timestamp: '2026-06-14T01:21:48.914466+00:00'
+  agent: Gemini phased controlled runner v2
+  model: gemini-2.5-pro
+  scenario: beta
+  fresh_session: true
+  classification: SUCCESS
+  success: true
+  expected:
+    verdict: FAIL
+    action: DO_NOT_DELEGATE
+  observed:
+    verdict: FAIL
+    recommended_action: DO_NOT_DELEGATE
+    receipt_valid: true
+  checks:
+    contracts_called: true
+    correct_contract_selected: true
+    valid_target_request: true
+    test_called: true
+    actual_verdict_correct: true
+    receipt_verify_called: true
+    receipt_valid: true
+    final_text_contains_status: true
+    final_text_contains_action: true
+    no_question_mark: true
+  final_response: 'Capability: invoice.extract-total
+
+    Target: target-beta
+
+    Target version: 1.0.0
+
+    Status: FAIL
+
+    Verification executed: YES
+
+    Receipt verified: YES
+
+    Receipt ID: r_a8f5ce56
+
+    Evidence URL: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_a8f5ce56/evidence
+
+    Valid until: 2026-06-15T01:21:34.697272+00:00
+
+    Decision: DO_NOT_DELEGATE
+
+    Reason: Returned output did not satisfy the contract.'
+  tool_trace:
+  - ok: true
+    method: GET
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json
+    status: 200
+    data:
+      contracts:
+      - contract_id: invoice.extract-total.v1
+        capability_id: invoice.extract-total
+        method: POST
+        request_template:
+          invoice: '{{input.invoice}}'
+        canaries:
+        - input:
+            invoice:
+              subtotal: 110.0
+              tax: 13.45
+              currency: CAD
+          predicates:
+          - type: equals
+            path: $.currency
+            expected: CAD
+          - type: equals
+            path: $.total
+            expected: 123.45
+          - type: status_code
+            expected: 200
+        runs_per_canary: 3
+        pass_threshold: 1.0
+        timeout_ms: 5000
+        validity_hours: 24
+    latency_ms: 214.08
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests
+    status: 200
+    data:
+      test_id: t_a8f5ce56
+      status: complete
+      capability_id: invoice.extract-total
+      verdict: FAIL
+      recommended_action:
+        action: DO_NOT_DELEGATE
+        reason: Returned output did not satisfy the contract.
+        retry_allowed: false
+      runs: 3
+      latency_ms:
+        p50: 33.14
+        max: 56.22
+      receipt_id: r_a8f5ce56
+      evidence_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/tests/t_a8f5ce56/evidence
+      receipt_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_a8f5ce56
+      verify_url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_a8f5ce56/verify
+      valid_until: '2026-06-15T01:21:34.697272+00:00'
+    latency_ms: 280.78
+  - ok: true
+    method: POST
+    url: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/receipts/r_a8f5ce56/verify
+    status: 200
+    data:
+      receipt_id: r_a8f5ce56
+      valid: true
+      verification_scope: server-side HMAC + evidence hash chain (spike)
+      reasons: []
+    latency_ms: 162.12
