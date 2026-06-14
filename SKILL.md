@@ -1,174 +1,503 @@
 ---
+
 name: trustcheck
-description: Behaviorally verify that a target agent or service can actually perform ONE declared capability before delegating a consequential task to it. Use when you are about to delegate real work to an unverified target and a published TrustCheck contract exists for that capability. Returns PASS / FAIL / INCONCLUSIVE / UNAVAILABLE plus a signed, replayable evidence receipt.
----
+description: Behaviorally verify whether a consented target agent or service can perform one declared capability before delegating consequential work. Use when a compatible published TrustCheck contract exists. Returns PASS, FAIL, INCONCLUSIVE, or UNAVAILABLE with an independently verifiable Ed25519 evidence receipt.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # TrustCheck — Behavioral Capability Verification
 
-TrustCheck tests one declared capability against one explicit test contract using
-safe, consented canary requests. It is NOT a trust score, NOT identity
-verification, and NOT a reputation system.
+TrustCheck runs safe, consented canary tests against one published capability contract.
 
-Base URL: provided by the user as TRUSTCHECK_URL (example below uses
-`http://127.0.0.1:8787`).
+TrustCheck is not:
 
-## Use TrustCheck when ALL of these are true
-- You are about to delegate a consequential (costly or hard-to-reverse) task.
-- The target has not been behaviorally verified recently (no unexpired receipt).
-- A compatible published contract exists in `GET /contracts.json` for the
-  capability you need.
+* identity verification;
+* AgentFacts schema validation;
+* a reputation system;
+* a universal trust score;
+* permission to probe arbitrary endpoints.
 
-## Do NOT use TrustCheck when
-- You need identity verification or AgentFacts schema validation (out of scope).
-- The task is trivial or easily reversible — just attempt it.
-- No compatible contract exists — report `UNSUPPORTED_CAPABILITY` to the user;
-  do not invent a contract.
-- The target has not consented (no valid `consent_token`).
-- You want a universal reputation/trust score — TrustCheck does not provide one.
+The user supplies:
 
-## Exact operating procedure
-1. `GET {TRUSTCHECK_URL}/contracts.json` and find a contract whose
-   `capability_id` matches the capability you need to delegate.
-2. If no contract matches: stop and report `UNSUPPORTED_CAPABILITY`.
-3. `POST {TRUSTCHECK_URL}/tests` with the `contract_id` and a `target` object
-   (see worked example). Never modify or author contracts.
-4. Store the returned `test_id`.
-5. If the response `status` is already `"complete"`, use it directly. Otherwise
-   poll `GET {TRUSTCHECK_URL}/tests/{test_id}` every 2 seconds, maximum 30
-   polls; if still not complete, treat as UNAVAILABLE.
-6. Interpret `verdict`:
-   - `PASS` → verify the receipt (step 7); if valid, the capability is verified
-     — proceed to delegate and cite `receipt_id`.
-   - `FAIL` → do NOT delegate. Cite `evidence_url` in your report.
-   - `INCONCLUSIVE` → retry the test once; if still inconclusive, do NOT
-     delegate for consequential tasks.
-   - `UNAVAILABLE` → wait 5 seconds, retry once; if still unavailable, report
-     the target as unavailable and do not delegate now.
-7. Verify the receipt. Two equivalent options:
-   - Convenience: `POST {TRUSTCHECK_URL}/receipts/{receipt_id}/verify`.
-   - Independent (recommended, zero server trust): fetch the issuer public key
-     from `GET {TRUSTCHECK_URL}/.well-known/trustcheck-key.json`, then check the
-     receipt's Ed25519 `signature` over its canonical signed fields using the
-     key whose `kid` equals the receipt's `key_id`. No server secret is needed,
-     so a compromised server cannot forge a passing receipt.
-   Require `"valid": true` before citing the receipt or delegating. If
-   `valid` is false, treat the result as INCONCLUSIVE.
-8. Always follow `recommended_action.action` (`DELEGATE` /
-   `DO_NOT_DELEGATE`) unless receipt verification failed. When
-   `retry_allowed` is true (INCONCLUSIVE or UNAVAILABLE), you may retry the
-   test exactly once before accepting DO_NOT_DELEGATE.
-9. On any error response, read `agent_action_hint` and follow it exactly. After
-   two failed recovery attempts, conclude UNAVAILABLE.
-10. Never ask a human for clarification unless the user explicitly requested
-    manual escalation. Every situation above has a defined action.
-
-## Worked example (literal)
-
-Goal: decide whether `compliant-target` can extract invoice totals.
-
-**Step 1 — list contracts**
+```text
+TRUSTCHECK_URL
 ```
-GET http://127.0.0.1:8787/contracts.json
-```
-Response (truncated):
-```json
-{"contracts": [{"contract_id": "invoice.extract-total.v1",
-                "capability_id": "invoice.extract-total", "...": "..."}]}
-```
-`invoice.extract-total` matches → use `contract_id` `invoice.extract-total.v1`.
 
-**Step 2 — submit test**
+Example production service:
+
+```text
+https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app
 ```
-POST http://127.0.0.1:8787/tests
+
+Never replace `TRUSTCHECK_URL` with localhost, an example domain, or another host.
+
+## When to use TrustCheck
+
+Use TrustCheck only when all of these are true:
+
+* You are about to delegate consequential, costly, sensitive, or difficult-to-reverse work.
+* The target has not been verified recently with an unexpired receipt.
+* A compatible contract exists in `GET {TRUSTCHECK_URL}/contracts.json`.
+* The target supplied a valid consent token.
+* The target ID and endpoint match a registered consent binding.
+
+## When not to use TrustCheck
+
+Do not use TrustCheck when:
+
+* the task is trivial and easily reversible;
+* identity verification is required;
+* AgentFacts schema validation is required;
+* no compatible published contract exists;
+* the target has not consented;
+* the target endpoint is not registered;
+* a universal trust or reputation score is requested.
+
+If no contract supports the required capability:
+
+```text
+Status: UNSUPPORTED_CAPABILITY
+Decision: DO_NOT_DELEGATE
+Independent receipt verification: NOT_EXECUTED
+Receipt ID: NONE
+Evidence URL: NONE
+Valid until: NONE
+Reason: No compatible published TrustCheck contract exists.
+```
+
+Do not invent, edit, or author a contract.
+
+# Quick example
+
+Given:
+
+```text
+TRUSTCHECK_URL=https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app
+```
+
+and this consented target:
+
+```text
+target_id: target-alpha
+endpoint: https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/alpha/invoice-total
+declared_version: 1.0.0
+consent_token: demo-consent
+required_capability: invoice.extract-total
+```
+
+First call:
+
+```http
+GET {TRUSTCHECK_URL}/contracts.json
+```
+
+Select the published contract whose `capability_id` is:
+
+```text
+invoice.extract-total
+```
+
+Then submit:
+
+```http
+POST {TRUSTCHECK_URL}/tests
 Content-Type: application/json
+```
 
+```json
 {
   "contract_id": "invoice.extract-total.v1",
   "target": {
     "target_id": "target-alpha",
-    "endpoint": "http://127.0.0.1:8787/targets/alpha/invoice-total",
+    "endpoint": "https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/alpha/invoice-total",
     "declared_version": "1.0.0",
     "consent_token": "demo-consent"
   }
 }
 ```
-Response:
+
+After receiving the result:
+
+1. fetch `receipt_url`;
+2. fetch `key_endpoint`;
+3. verify the receipt's Ed25519 signature independently;
+4. reject a revoked or unknown key;
+5. follow the verified result's recommended action.
+
+# Required operating procedure
+
+## 1. Discover the contract
+
+Call:
+
+```http
+GET {TRUSTCHECK_URL}/contracts.json
+```
+
+Find a contract whose `capability_id` exactly matches the capability needed for delegation.
+
+For invoice-total extraction:
+
+```text
+capability_id: invoice.extract-total
+contract_id: invoice.extract-total.v1
+```
+
+If no compatible contract exists, stop with `UNSUPPORTED_CAPABILITY`.
+
+## 2. Submit the behavioral test
+
+Call:
+
+```http
+POST {TRUSTCHECK_URL}/tests
+Content-Type: application/json
+```
+
+Body:
+
 ```json
 {
-  "test_id": "t_ab12cd34",
-  "status": "complete",
-  "capability_id": "invoice.extract-total",
-  "verdict": "PASS",
-  "recommended_action": {"action": "DELEGATE",
-                          "reason": "All required predicates passed.",
-                          "retry_allowed": false},
-  "runs": 3,
-  "latency_ms": {"p50": 1.2, "max": 2.0},
-  "receipt_id": "r_ab12cd34",
-  "evidence_url": "http://127.0.0.1:8787/tests/t_ab12cd34/evidence",
-  "receipt_url": "http://127.0.0.1:8787/receipts/r_ab12cd34",
-  "verify_url": "http://127.0.0.1:8787/receipts/r_ab12cd34/verify",
-  "valid_until": "2026-07-12T15:00:00+00:00"
+  "contract_id": "PUBLISHED_CONTRACT_ID",
+  "target": {
+    "target_id": "REGISTERED_TARGET_ID",
+    "endpoint": "EXACT_REGISTERED_TARGET_ENDPOINT",
+    "declared_version": "TARGET_VERSION",
+    "consent_token": "CONSENT_TOKEN"
+  }
 }
 ```
-`status` is `complete` → no polling needed.
 
-**Step 3 — verify receipt**
+Rules:
+
+* use the exact supplied target ID;
+* use the exact supplied endpoint;
+* do not substitute another host or path;
+* do not infer behavior from the target's name;
+* do not modify the published contract;
+* do not test an unconsented target.
+
+## 3. Retrieve the result
+
+Store the returned:
+
+```text
+test_id
 ```
-POST http://127.0.0.1:8787/receipts/r_ab12cd34/verify
+
+If `status` is already `complete`, use the returned result.
+
+Otherwise poll:
+
+```http
+GET {TRUSTCHECK_URL}/tests/{test_id}
 ```
-Response:
-```json
-{"receipt_id": "r_ab12cd34", "valid": true, "reasons": []}
+
+Polling limits:
+
+* wait 2 seconds between polls;
+* maximum 30 polls;
+* stop immediately when `status` becomes `complete`;
+* after 30 incomplete polls, classify the result as `UNAVAILABLE`.
+
+## 4. Read the required result fields
+
+Always read:
+
+```text
+verdict
+recommended_action
+receipt_id
+receipt_url
+evidence_url
+key_id
+key_endpoint
+valid_until
 ```
 
-**Step 4 — decide**
-Verdict PASS + receipt valid → DELEGATE. Report: "Capability
-invoice.extract-total verified PASS at <timestamp>, receipt r_ab12cd34
-(valid until <valid_until>). Evidence: /tests/t_ab12cd34/evidence."
+Do not make the final delegation decision before independently verifying the receipt.
 
-For the failing target, the same flow returns `"verdict": "FAIL"` and
-`recommended_action.action = "DO_NOT_DELEGATE"` → report that delegation is
-unsafe and include `evidence_url`. The receipt for a FAIL is still verifiable —
-it proves the failure happened.
+## 5. Fetch the receipt
 
-## Error codes
-| error_code | meaning | what you do |
-|---|---|---|
-| INVALID_CONTRACT | malformed request body | fix body per `agent_action_hint`, resend once |
-| UNSUPPORTED_CAPABILITY | no published contract | stop; report to user |
-| TARGET_NOT_CONSENTED | target not allowlisted/consented | stop; do not retry this target |
-| UNKNOWN_TEST | bad id | recheck stored id, retry once |
-| RATE_LIMITED | too many tests | wait 60s, retry once |
-| EXECUTOR_BUSY | service overloaded | wait 5s, retry once |
+Call the absolute URL returned in:
 
-## Receipt verification (Ed25519, independent)
+```text
+receipt_url
+```
 
-Every receipt is signed with Ed25519 and is independently verifiable — you do
-not have to trust the TrustCheck server.
+Do not alter the receipt before verification.
 
-Signed fields (the signature covers exactly these, in canonical form):
-`receipt_id, test_id, contract_id, capability_id, target_id, target_endpoint,
-declared_version, verdict, recommended_action, evidence_root_hash, issued_at,
-valid_until, key_id, signature_algorithm, canonicalization_version`.
+## 6. Fetch the public-key document
 
-To verify independently:
-1. `GET {TRUSTCHECK_URL}/.well-known/trustcheck-key.json`.
-2. Find the key whose `kid` == the receipt's `key_id` (check `active_key`, then
-   `previous_keys`). If the `kid` is only in `revoked_keys`, treat as invalid.
-3. Rebuild the canonical message: take the 15 signed fields above (NOT
-   `signature`), serialize as compact JSON with sorted keys and UTF-8.
-4. Verify the Ed25519 `signature` (base64url) against that message with the
-   key's public bytes `x` (base64url).
-5. Accept only if the signature verifies AND `canonicalization_version` is one
-   you support (`tc-canon-1`).
+Call the absolute URL returned in:
 
-If any signed field was altered (verdict, target, evidence_root_hash,
-valid_until, ...), verification fails. The legacy `hmac_signature_DEPRECATED`
-field must NOT be used; it remains only for backward compatibility.
+```text
+key_endpoint
+```
 
-## Result fields you must read
-`verdict`, `recommended_action`, `receipt_id`, `evidence_url`, `receipt_url`,
-`verify_url` (all absolute URLs), `valid_until`.
-A verdict applies only to: the tested capability, the tested target version,
-at the test timestamp, until `valid_until`. After expiry, re-test.
+The standard endpoint is:
+
+```http
+GET {TRUSTCHECK_URL}/.well-known/trustcheck-key.json
+```
+
+Require:
+
+```text
+issuer == TRUSTCHECK_URL
+signature_algorithm == Ed25519
+canonicalization_version == tc-canon-1
+```
+
+Find the public key whose `kid` equals the receipt's `key_id`.
+
+Search:
+
+1. `active_key`;
+2. `previous_keys`.
+
+If the key appears only in `revoked_keys`, reject the receipt.
+
+If the key ID is unknown, reject the receipt.
+
+## 7. Verify the receipt independently
+
+The signature covers exactly these fields:
+
+```text
+receipt_id
+test_id
+contract_id
+capability_id
+target_id
+target_endpoint
+declared_version
+verdict
+recommended_action
+evidence_root_hash
+issued_at
+valid_until
+key_id
+signature_algorithm
+canonicalization_version
+```
+
+Canonicalization `tc-canon-1`:
+
+1. exclude the `signature` field;
+2. include exactly the signed fields listed above;
+3. sort object keys lexicographically;
+4. serialize as compact JSON using `,` and `:` separators;
+5. encode as UTF-8;
+6. decode the receipt signature from base64url;
+7. decode the selected Ed25519 public key `x` from base64url;
+8. verify the signature over the canonical bytes.
+
+Accept the receipt only when all conditions hold:
+
+```text
+signature verifies
+issuer matches TRUSTCHECK_URL
+key_id exists
+key is not revoked
+signature_algorithm is Ed25519
+canonicalization_version is tc-canon-1
+receipt is not expired
+```
+
+The legacy field:
+
+```text
+hmac_signature_DEPRECATED
+```
+
+must not be used for independent verification.
+
+The compatibility endpoint:
+
+```http
+POST {TRUSTCHECK_URL}/receipts/{receipt_id}/verify
+```
+
+may be used for diagnostics, but it is not sufficient as the sole verification mechanism. Independent Ed25519 verification is required before delegation.
+
+Independent verification proves that the signed receipt has not been modified and was signed by the holder of the corresponding private key. It does not prevent a compromised issuer with access to that private key from creating fraudulent receipts.
+
+## 8. Interpret the result
+
+### PASS
+
+Required conditions:
+
+```text
+verdict == PASS
+independent receipt verification == VALID
+recommended_action.action == DELEGATE
+```
+
+Final decision:
+
+```text
+DELEGATE
+```
+
+### FAIL
+
+A valid FAIL receipt proves that the tested behavior failed its contract.
+
+Final decision:
+
+```text
+DO_NOT_DELEGATE
+```
+
+### INCONCLUSIVE
+
+Examples:
+
+* malformed target response;
+* non-JSON response;
+* unsupported predicate;
+* invalid or unverifiable receipt.
+
+If `retry_allowed` is true, retry the complete test exactly once.
+
+If still inconclusive:
+
+```text
+DO_NOT_DELEGATE
+```
+
+### UNAVAILABLE
+
+Examples:
+
+* timeout;
+* connection failure;
+* target server error;
+* executor unavailable;
+* polling limit reached.
+
+If `retry_allowed` is true, retry the complete test exactly once.
+
+If still unavailable:
+
+```text
+DO_NOT_DELEGATE
+```
+
+Do not convert `UNAVAILABLE` into `FAIL`.
+
+# Decision table
+
+| Test verdict | Independent receipt | Final decision                          |
+| ------------ | ------------------- | --------------------------------------- |
+| PASS         | VALID               | DELEGATE                                |
+| PASS         | INVALID             | DO_NOT_DELEGATE                         |
+| FAIL         | VALID               | DO_NOT_DELEGATE                         |
+| FAIL         | INVALID             | DO_NOT_DELEGATE                         |
+| INCONCLUSIVE | Any                 | DO_NOT_DELEGATE after one allowed retry |
+| UNAVAILABLE  | Not available       | DO_NOT_DELEGATE after one allowed retry |
+
+# Error handling
+
+Every TrustCheck error may include:
+
+```text
+error_code
+message
+agent_action_hint
+```
+
+Follow `agent_action_hint`.
+
+| Error code               | Required action                              |
+| ------------------------ | -------------------------------------------- |
+| `INVALID_CONTRACT`       | Correct the request body and retry once      |
+| `UNSUPPORTED_CAPABILITY` | Stop; return `DO_NOT_DELEGATE`               |
+| `TARGET_NOT_CONSENTED`   | Stop; do not retry that target/endpoint pair |
+| `UNKNOWN_TEST`           | Recheck the stored identifier and retry once |
+| `RATE_LIMITED`           | Wait 60 seconds and retry once               |
+| `EXECUTOR_BUSY`          | Wait 5 seconds and retry once                |
+
+After two failed recovery attempts:
+
+```text
+Status: UNAVAILABLE
+Decision: DO_NOT_DELEGATE
+```
+
+# Execution environment blocked
+
+The environment is blocked when:
+
+* no HTTP tool is available;
+* POST requests are unsupported;
+* network egress blocks the TrustCheck host;
+* DNS or proxy restrictions prevent reaching TrustCheck.
+
+In that case:
+
+* do not infer `PASS`;
+* do not infer `FAIL`;
+* do not claim the target was tested;
+* do not ask the user to change network settings;
+* do not ask for another tool;
+* do not offer to retry;
+* do not append a question.
+
+Return exactly:
+
+```text
+Status: UNAVAILABLE
+Decision: DO_NOT_DELEGATE
+Independent receipt verification: NOT_EXECUTED
+Receipt ID: NONE
+Evidence URL: NONE
+Valid until: NONE
+Reason: EXECUTION_ENVIRONMENT_BLOCKED
+```
+
+# Required final response format
+
+Always return every line below:
+
+```text
+Status: <PASS | FAIL | INCONCLUSIVE | UNAVAILABLE | UNSUPPORTED_CAPABILITY>
+Decision: <DELEGATE | DO_NOT_DELEGATE>
+Independent receipt verification: <VALID | INVALID | NOT_EXECUTED>
+Receipt ID: <receipt_id | NONE>
+Evidence URL: <absolute_url | NONE>
+Valid until: <timestamp | NONE>
+Reason: <one concise sentence>
+```
+
+Mandatory rules:
+
+* Do not omit the `Decision` line.
+* Do not return only `PASS` or `FAIL`.
+* Do not delegate unless the verdict is `PASS` and independent verification is `VALID`.
+* Do not append a question.
+* Do not ask the user for clarification.
+* Do not offer an additional action unless explicitly requested.
+
+# Scope and limitations
+
+A TrustCheck result applies only to:
+
+* the tested capability;
+* the tested target;
+* the declared target version;
+* the published contract;
+* the recorded test conditions;
+* the validity window ending at `valid_until`.
+
+A valid receipt does not prove:
+
+* identity;
+* ownership;
+* authorization outside the tested task;
+* general trustworthiness;
+* unrelated capabilities;
+* future performance after expiration.
+
+After the receipt expires, run a new test before delegating another consequential task.

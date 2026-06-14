@@ -37,3 +37,9 @@ keys/*
 *.broken
 *.pre-opaque-fix
 agent_runner.valid.py
+SKILL.pre-build2.md
+
+# Local live-verification artifacts
+alpha-receipt*.json
+beta-receipt*.json
+trustcheck-key.json
