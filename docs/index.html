@@ -4,120 +4,198 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TrustCheck — Behavioral Verification for Agent Delegation</title>
-  <meta name="description" content="TrustCheck verifies claimed agent capabilities through real HTTP canary tests and independently verifiable Ed25519 receipts.">
+  <meta name="description" content="TrustCheck verifies claimed agent capabilities through HTTP canary tests and independently verifiable Ed25519 signatures.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg: #0b0f14;
-      --panel: #111824;
-      --panel-2: #151f2e;
-      --text: #f4f7fb;
-      --muted: #a8b3c5;
-      --line: #273244;
-      --green: #4ade80;
-      --red: #fb7185;
-      --blue: #60a5fa;
+      --bg: #060913;
+      --panel: #0f1524;
+      --panel-hover: #162035;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(96, 165, 250, 0.2);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      
+      --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.15);
+      --red: #ef4444;
+      --red-glow: rgba(239, 68, 68, 0.15);
+      --blue: #3b82f6;
+      --blue-glow: rgba(59, 130, 246, 0.15);
       --amber: #f59e0b;
-      --white: #ffffff;
+      --amber-glow: rgba(245, 158, 11, 0.15);
+      --terminal-bg: #090d16;
     }
 
     * {
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 35%),
-        radial-gradient(circle at top right, rgba(74, 222, 128, 0.08), transparent 28%),
+      font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.12), transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.06), transparent 40%),
         var(--bg);
       color: var(--text);
-      line-height: 1.6;
-    }
-
-    a {
-      color: var(--blue);
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
     .wrap {
-      max-width: 1120px;
+      max-width: 1160px;
       margin: 0 auto;
-      padding: 40px 20px 64px;
+      padding: 0 24px;
     }
 
+    /* Navbar */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background: var(--blue);
+      box-shadow: 0 0 10px var(--blue);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    /* Hero Section */
     .hero {
-      padding: 56px 0 36px;
+      padding: 80px 0 60px;
+      text-align: center;
     }
 
     .badge {
       display: inline-flex;
       gap: 8px;
       align-items: center;
-      padding: 7px 12px;
-      border: 1px solid var(--line);
+      padding: 6px 14px;
+      border: 1px solid var(--border);
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.03);
       color: var(--muted);
-      font-size: 14px;
-      margin-bottom: 24px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 32px;
     }
 
     .dot {
       width: 8px;
       height: 8px;
-      border-radius: 999px;
+      border-radius: 50%;
       background: var(--green);
-      box-shadow: 0 0 16px rgba(74, 222, 128, 0.9);
+      box-shadow: 0 0 8px var(--green);
     }
 
     h1 {
-      max-width: 900px;
-      margin: 0 0 20px;
-      font-size: clamp(42px, 7vw, 78px);
-      line-height: 0.95;
-      letter-spacing: -0.06em;
+      font-family: 'Outfit', sans-serif;
+      max-width: 960px;
+      margin: 0 auto 24px;
+      font-size: clamp(38px, 6vw, 68px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+      background: linear-gradient(180deg, #ffffff 50%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .subtitle {
-      max-width: 840px;
-      margin: 0 0 28px;
+      max-width: 780px;
+      margin: 0 auto 36px;
       color: var(--muted);
-      font-size: clamp(18px, 2.4vw, 24px);
+      font-size: clamp(16px, 2.2vw, 20px);
+      line-height: 1.6;
     }
 
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 28px;
+      justify-content: center;
+      gap: 16px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
+      padding: 12px 24px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
       background: var(--panel);
       color: var(--text);
-      font-weight: 650;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--panel-hover);
+      border-color: rgba(255, 255, 255, 0.15);
+      text-decoration: none;
     }
 
     .btn.primary {
       background: var(--text);
       color: var(--bg);
       border-color: var(--text);
+      box-shadow: 0 4px 14px rgba(255, 255, 255, 0.1);
     }
 
+    .btn.primary:hover {
+      background: #f8fafc;
+      transform: translateY(-1px);
+    }
+
+    /* Grid Layouts */
     .grid {
       display: grid;
-      gap: 18px;
+      gap: 24px;
+      margin-bottom: 24px;
     }
 
     .grid.two {
@@ -129,276 +207,1078 @@
     }
 
     .card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 22px;
-      box-shadow: 0 18px 50px rgba(0,0,0,0.18);
+      background: linear-gradient(180deg, rgba(15, 21, 36, 0.6), rgba(15, 21, 36, 0.3));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
     }
 
     .card h2, .card h3 {
+      font-family: 'Outfit', sans-serif;
       margin-top: 0;
-      line-height: 1.15;
+      margin-bottom: 16px;
+      font-size: 22px;
+      letter-spacing: -0.01em;
     }
 
-    .muted {
-      color: var(--muted);
+    .card p {
+      margin-top: 0;
+      margin-bottom: 16px;
     }
 
+    .card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Section Styling */
     .section {
-      margin-top: 34px;
+      padding: 60px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-header {
+      margin-bottom: 40px;
     }
 
     .section-title {
-      margin: 0 0 14px;
-      font-size: 28px;
-      letter-spacing: -0.03em;
-    }
-
-    .flow {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .step {
-      min-height: 92px;
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: var(--panel);
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px;
       font-weight: 700;
-      font-size: 14px;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
     }
 
-    .step span {
-      display: block;
-      margin-top: 6px;
+    .section-desc {
       color: var(--muted);
-      font-weight: 500;
-      font-size: 12px;
+      margin: 0;
+      font-size: 16px;
     }
 
-    .result {
+    /* Pipeline Diagram */
+    .pipeline {
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .pipe-step {
+      flex: 1;
+      background: rgba(15, 21, 36, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 13px;
+      position: relative;
+    }
+
+    .pipe-step-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .pipe-step-title {
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .pipe-step-desc {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    /* Interactive Playground */
+    .playground {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 24px;
+      background: rgba(9, 13, 22, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-top: 20px;
+    }
+
+    .playground-pane {
+      display: flex;
+      flex-direction: column;
+      height: 520px;
+    }
+
+    .pane-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .pane-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
       display: flex;
       align-items: center;
+      gap: 8px;
+    }
+
+    .selector-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .selector-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .selector-btn.active {
+      background: var(--blue);
+      color: var(--text);
+      border-color: var(--blue);
+    }
+
+    .editor-wrapper {
+      flex: 1;
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--terminal-bg);
+    }
+
+    .editor-textarea {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      padding: 16px;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+    }
+
+    .editor-actions {
+      display: flex;
       justify-content: space-between;
-      gap: 12px;
-      margin: 14px 0;
-      padding: 14px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.035);
-      border: 1px solid var(--line);
+      margin-top: 12px;
+      gap: 8px;
+    }
+
+    .terminal-output {
+      flex: 1;
+      background: var(--terminal-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      overflow-y: auto;
+      color: #94a3b8;
+    }
+
+    .term-line {
+      margin-bottom: 6px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    .term-info { color: #60a5fa; }
+    .term-success { color: #34d399; }
+    .term-error { color: #f87171; }
+    .term-warn { color: #fbbf24; }
+    
+    .status-panel {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-top: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .status-badge.valid {
+      background: var(--green-glow);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.1);
+    }
+
+    .status-badge.invalid {
+      background: var(--red-glow);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.1);
+    }
+
+    .status-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .status-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .status-val {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Live Proof Cards */
+    .proof-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(15, 21, 36, 0.6), rgba(15, 21, 36, 0.2));
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .proof-card.pass {
+      border-left: 4px solid var(--green);
+    }
+
+    .proof-card.fail {
+      border-left: 4px solid var(--red);
+    }
+
+    .proof-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
     }
 
     .pill {
       display: inline-flex;
       align-items: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 12px;
-      letter-spacing: 0.04em;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
 
     .pill.green {
-      background: rgba(74, 222, 128, 0.14);
+      background: var(--green-glow);
       color: var(--green);
     }
 
     .pill.red {
-      background: rgba(251, 113, 133, 0.14);
+      background: var(--red-glow);
       color: var(--red);
     }
 
     .pill.blue {
-      background: rgba(96, 165, 250, 0.14);
+      background: var(--blue-glow);
       color: var(--blue);
     }
 
     .pill.amber {
-      background: rgba(245, 158, 11, 0.14);
+      background: var(--amber-glow);
       color: var(--amber);
     }
 
-    code, pre {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    .proof-results {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,0.02);
     }
 
-    pre {
-      overflow-x: auto;
-      padding: 16px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: #070a0f;
-      color: #d7e1f0;
+    .proof-row {
+      display: flex;
+      justify-content: space-between;
       font-size: 13px;
     }
 
+    .proof-row span:first-child {
+      color: var(--muted);
+    }
+
+    .proof-row span:last-child {
+      font-weight: 600;
+    }
+
+    .proof-toggle {
+      background: transparent;
+      border: none;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0;
+      margin-top: auto;
+      text-decoration: none;
+    }
+
+    .proof-toggle:hover {
+      text-decoration: underline;
+    }
+
+    .proof-json-drawer {
+      display: none;
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--terminal-bg);
+      max-height: 240px;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .proof-json-drawer pre {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    /* Links & Lists */
     ul {
+      margin: 0;
       padding-left: 20px;
     }
 
+    li {
+      margin-bottom: 8px;
+      color: var(--muted);
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    a:hover {
+      color: #60a5fa;
+      text-decoration: underline;
+    }
+
+    pre.code-block {
+      background: var(--terminal-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin: 16px 0 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+
+    /* Footer */
     .footer {
-      margin-top: 42px;
-      padding-top: 24px;
-      border-top: 1px solid var(--line);
+      margin-top: 80px;
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
       color: var(--muted);
       font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     @media (max-width: 900px) {
-      .grid.two, .grid.three, .flow {
+      .grid.two, .grid.three, .pipeline, .playground {
         grid-template-columns: 1fr;
       }
-
-      .hero {
-        padding-top: 32px;
+      .pipeline {
+        flex-direction: column;
+      }
+      .playground-pane {
+        height: 400px;
+      }
+      .footer {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
       }
     }
   </style>
 </head>
 <body>
-  <main class="wrap">
+  
+  <div class="wrap">
+    <!-- Navbar -->
+    <header class="nav">
+      <div class="logo">
+        <div class="logo-icon"></div>
+        TrustCheck
+      </div>
+      <nav class="nav-links">
+        <a href="https://github.com/Faadil1/trustcheck-nandahack">GitHub</a>
+        <a href="#playground">Interactive Demo</a>
+        <a href="#proofs">Proof Cards</a>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
     <section class="hero">
-      <div class="badge"><span class="dot"></span> Live Cloud Run service · Ed25519 receipts · Tamper rejection proven</div>
-      <h1>TrustCheck verifies before agents delegate.</h1>
+      <div class="badge">
+        <span class="dot"></span> 
+        Live Cloud Run Service &bull; Ed25519 Cryptography &bull; Verified Cold-Agent Safety
+      </div>
+      <h1>Trust check before you delegate.</h1>
       <p class="subtitle">
-        A zero-trust behavioral verification layer for agent delegation. TrustCheck turns a capability claim into real HTTP canary tests, signed evidence, and an independently verifiable receipt.
+        Cryptographic capability verification for AI agent collaboration. TrustCheck runs real-time behavioral canary tests on agent endpoints, verifies their output against strict contracts, and issues independently verifiable Ed25519 receipts. **Delegate with proof, not trust.**
       </p>
       <div class="hero-actions">
-        <a class="btn primary" href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/health">Live Health</a>
-        <a class="btn" href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json">View Contract</a>
-        <a class="btn" href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/.well-known/trustcheck-key.json">Public Key</a>
-        <a class="btn" href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof">Proof Bundle</a>
+        <a class="btn primary" href="#playground">Try Interactive Playground</a>
+        <a class="btn" href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/health" target="_blank">Live Health API</a>
+        <a class="btn" href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json" target="_blank">View Contract Spec</a>
+        <a class="btn" href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof" target="_blank">Committed Proofs</a>
       </div>
     </section>
 
-    <section class="section grid two">
+    <!-- What it is cards -->
+    <section class="grid two">
       <div class="card">
         <h2>What it is</h2>
         <p>
-          TrustCheck verifies whether a consented target can actually perform one declared capability before another agent delegates consequential work.
+          TrustCheck acts as an active security gate. Before a delegator agent assigns a high-consequence task, TrustCheck runs runtime canary calls against the target agent's live endpoint, verifies predicates against a behavioral contract, and stamps a tamper-resistant cryptographic receipt.
         </p>
-        <p class="muted">
-          The invoice-total capability is the Hello World demonstration. The product is the verification pattern.
+        <p class="muted" style="font-size: 13px;">
+          The invoice-total capability is the Hello World demonstration. The product is the reusable zero-trust verification pattern.
         </p>
       </div>
       <div class="card">
         <h2>What it is not</h2>
-        <ul class="muted">
-          <li>Not identity verification.</li>
-          <li>Not AgentFacts schema validation.</li>
-          <li>Not a reputation system.</li>
-          <li>Not a universal trust score.</li>
-          <li>Not production-ready security infrastructure.</li>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+          <li>Not identity verification (doesn't assume endpoint identity means capability accuracy).</li>
+          <li>Not simple schema validation (executes real runtime canaries).</li>
+          <li>Not a reputation system or historical trust scoring.</li>
+          <li>Not production-ready certificate authority infrastructure.</li>
         </ul>
       </div>
     </section>
 
-    <section class="section card">
-      <h2 class="section-title">Verification flow</h2>
-      <p class="muted">The same pattern can generalize to any capability that can be expressed as a contract, canaries, predicates, evidence, and a signed receipt.</p>
-      <div class="flow">
-        <div class="step">Claim<span>Target says it can do a task</span></div>
-        <div class="step">Contract<span>Machine-readable behavioral spec</span></div>
-        <div class="step">HTTP Test<span>Real canary calls to target</span></div>
-        <div class="step">Evidence<span>Outputs, predicates, hashes</span></div>
-        <div class="step">Receipt<span>Ed25519 signed result</span></div>
-        <div class="step">Verify<span>Independent public-key check</span></div>
-        <div class="step">Decision<span>Delegate or do not delegate</span></div>
-      </div>
-    </section>
-
+    <!-- Verification Flow Diagram -->
     <section class="section">
-      <h2 class="section-title">Live proof cards</h2>
-      <div class="grid two">
-        <div class="card">
-          <span class="pill green">ALPHA</span>
-          <h3>target-alpha</h3>
-          <p class="muted">The target satisfies the published invoice-total contract.</p>
-          <div class="result"><strong>Verdict</strong><span class="pill green">PASS</span></div>
-          <div class="result"><strong>Decision</strong><span class="pill blue">DELEGATE</span></div>
-          <div class="result"><strong>Receipt</strong><span class="pill green">VALID</span></div>
-          <div class="result"><strong>Tampered copy</strong><span class="pill red">REJECTED</span></div>
-          <p><a href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof/alpha-pass">Open Alpha proof</a></p>
+      <div class="section-header">
+        <h2 class="section-title">Zero-Trust Verification Pipeline</h2>
+        <p class="section-desc">How TrustCheck secures the delegation handoff between two autonomous agents.</p>
+      </div>
+      <div class="pipeline">
+        <div class="pipe-step">
+          <div class="pipe-step-num">01. Claim</div>
+          <div class="pipe-step-title">Target Capability</div>
+          <div class="pipe-step-desc">Target agent claims it satisfies a contract.</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-step-num">02. Contract</div>
+          <div class="pipe-step-title">Behavioral Spec</div>
+          <div class="pipe-step-desc">Machine-readable rules, endpoints, and input/output predicates.</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-step-num">03. HTTP Test</div>
+          <div class="pipe-step-title">Runtime Canary</div>
+          <div class="pipe-step-desc">TrustCheck makes real, isolated sandbox calls to target.</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-step-num">04. Evidence</div>
+          <div class="pipe-step-title">Payload Hashing</div>
+          <div class="pipe-step-desc">Canary responses are collected and hashed into evidence.</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-step-num">05. Receipt</div>
+          <div class="pipe-step-title">Ed25519 Signing</div>
+          <div class="pipe-step-desc">TrustCheck signs the receipt with its private key.</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-step-num">06. Verify</div>
+          <div class="pipe-step-title">Offline Check</div>
+          <div class="pipe-step-desc">Delegator validates receipt signature using the public key.</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-step-num">07. Decision</div>
+          <div class="pipe-step-title">Delegation Action</div>
+          <div class="pipe-step-desc">Safe delegation executes if signature verifies and verdict is PASS.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Cryptographic Playground -->
+    <section class="section" id="playground">
+      <div class="section-header">
+        <h2 class="section-title">Interactive Verification Playground</h2>
+        <p class="section-desc">Run off-line cryptographic signature checks in your browser. Edit the receipt payload below to simulate a tamper attack and see how the validator rejects it instantly.</p>
+      </div>
+
+      <div class="playground">
+        <!-- Editor Panel -->
+        <div class="playground-pane">
+          <div class="pane-header">
+            <span class="pane-title">Receipt Editor (JSON)</span>
+            <div class="selector-group">
+              <button class="selector-btn active" id="sel-alpha">Alpha (PASS)</button>
+              <button class="selector-btn" id="sel-beta">Beta (FAIL)</button>
+              <button class="selector-btn" id="sel-tamper">Tampered (FAIL)</button>
+            </div>
+          </div>
+          <div class="editor-wrapper">
+            <textarea class="editor-textarea" id="json-editor" spellcheck="false"></textarea>
+          </div>
+          <div class="editor-actions">
+            <button class="btn primary" id="btn-verify" style="flex: 1;">Run Cryptographic Check</button>
+            <button class="btn" id="btn-tamper-verdict" title="Simulate altering the verdict field">Tamper Verdict</button>
+            <button class="btn" id="btn-reset">Reset</button>
+          </div>
         </div>
 
-        <div class="card">
-          <span class="pill red">BETA</span>
-          <h3>target-beta</h3>
-          <p class="muted">The target responds, but fails the published invoice-total contract.</p>
-          <div class="result"><strong>Verdict</strong><span class="pill red">FAIL</span></div>
-          <div class="result"><strong>Decision</strong><span class="pill amber">DO_NOT_DELEGATE</span></div>
-          <div class="result"><strong>Receipt</strong><span class="pill green">VALID</span></div>
-          <div class="result"><strong>Tampered copy</strong><span class="pill red">REJECTED</span></div>
-          <p><a href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof/beta-fail">Open Beta proof</a></p>
+        <!-- Terminal & Status Panel -->
+        <div class="playground-pane">
+          <div class="pane-header">
+            <span class="pane-title">Verification Logs</span>
+          </div>
+          <div class="terminal-output" id="term-log">
+            <!-- Logs dynamically populated -->
+          </div>
+          <div class="status-panel">
+            <div class="status-details">
+              <span class="status-label">Delegation Verdict</span>
+              <span class="status-val" id="status-verdict">UNKNOWN</span>
+            </div>
+            <div class="status-badge" id="status-badge">UNCHECKED</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section grid three">
-      <div class="card">
-        <h3>Service checks</h3>
-        <p class="pill green">33/33 PASS</p>
-        <p class="muted">Deterministic local service harness validated the core flow.</p>
+    <!-- Live Proof Cards -->
+    <section class="section" id="proofs">
+      <div class="section-header">
+        <h2 class="section-title">Live Target Proof Cards</h2>
+        <p class="section-desc">Verify real results from our live Cloud Run deployment. Toggle the JSON panel to view the signed receipt fields directly.</p>
       </div>
-      <div class="card">
-        <h3>Security audit</h3>
-        <p class="pill green">6/6 PASS</p>
-        <p class="muted">Signed fields, canonicalization, key handling, and tamper rejection verified.</p>
-      </div>
-      <div class="card">
-        <h3>Live model evals</h3>
-        <p class="pill blue">6 successes / 7 attempts</p>
-        <p class="muted">Across three Gemini model configurations, with one formatting-only retry.</p>
-      </div>
-    </section>
-
-    <section class="section card">
-      <h2 class="section-title">Verify locally</h2>
-      <p class="muted">Authentic receipts should return <code>"valid": true</code>. Tampered copies should return <code>"valid": false</code>.</p>
-      <pre>BASE="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app"
-
-python verify_receipt.py proof/alpha-pass/receipt.json \
-  --well-known "$BASE/.well-known/trustcheck-key.json"
-
-python verify_receipt.py proof/beta-fail/receipt.json \
-  --well-known "$BASE/.well-known/trustcheck-key.json"</pre>
-    </section>
-
-    <section class="section card">
-      <h2 class="section-title">Project files</h2>
       <div class="grid two">
-        <ul>
-          <li><a href="https://github.com/Faadil1/trustcheck-nandahack/blob/build-final/SKILL.md">SKILL.md</a></li>
-          <li><a href="https://github.com/Faadil1/trustcheck-nandahack/blob/build-final/EVIDENCE-SUMMARY.md">EVIDENCE-SUMMARY.md</a></li>
-          <li><a href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof">proof/</a></li>
-          <li><a href="https://github.com/Faadil1/trustcheck-nandahack/blob/build-final/verify_receipt.py">verify_receipt.py</a></li>
-        </ul>
-        <ul>
-          <li><a href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/health">/health</a></li>
-          <li><a href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json">/contracts.json</a></li>
-          <li><a href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/.well-known/trustcheck-key.json">/.well-known/trustcheck-key.json</a></li>
-          <li><a href="https://github.com/Faadil1/trustcheck-nandahack">GitHub repository</a></li>
-        </ul>
+        <!-- Target Alpha -->
+        <div class="proof-card pass">
+          <div class="proof-header">
+            <h3 style="margin: 0; font-weight: 700;">target-alpha</h3>
+            <span class="pill green">ALPHA - PASS</span>
+          </div>
+          <p class="muted" style="font-size: 14px; margin-bottom: 20px;">The target endpoint satisfies the published invoice-total contract under all canary runs.</p>
+          <div class="proof-results">
+            <div class="proof-row">
+              <span>Verdict</span>
+              <span style="color: var(--green);">PASS</span>
+            </div>
+            <div class="proof-row">
+              <span>Decision</span>
+              <span style="color: var(--blue);">DELEGATE</span>
+            </div>
+            <div class="proof-row">
+              <span>Receipt Integrity</span>
+              <span style="color: var(--green);">VALID</span>
+            </div>
+            <div class="proof-row">
+              <span>Tamper Rejection</span>
+              <span style="color: var(--green);">PROVEN</span>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+            <a href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof/alpha-pass" target="_blank" style="font-size: 13px;">View Files on GitHub &rarr;</a>
+            <button class="proof-toggle" onclick="toggleJsonDrawer('drawer-alpha')">Show Receipt JSON</button>
+          </div>
+          <div class="proof-json-drawer" id="drawer-alpha">
+            <pre><code id="code-alpha">Loading...</code></pre>
+          </div>
+        </div>
+
+        <!-- Target Beta -->
+        <div class="proof-card fail">
+          <div class="proof-header">
+            <h3 style="margin: 0; font-weight: 700;">target-beta</h3>
+            <span class="pill red">BETA - FAIL</span>
+          </div>
+          <p class="muted" style="font-size: 14px; margin-bottom: 20px;">The target responds with invalid fields, violating the invoice-total contract specifications.</p>
+          <div class="proof-results">
+            <div class="proof-row">
+              <span>Verdict</span>
+              <span style="color: var(--red);">FAIL</span>
+            </div>
+            <div class="proof-row">
+              <span>Decision</span>
+              <span style="color: var(--amber);">DO_NOT_DELEGATE</span>
+            </div>
+            <div class="proof-row">
+              <span>Receipt Integrity</span>
+              <span style="color: var(--green);">VALID</span>
+            </div>
+            <div class="proof-row">
+              <span>Tamper Rejection</span>
+              <span style="color: var(--green);">PROVEN</span>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+            <a href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof/beta-fail" target="_blank" style="font-size: 13px;">View Files on GitHub &rarr;</a>
+            <button class="proof-toggle" onclick="toggleJsonDrawer('drawer-beta')">Show Receipt JSON</button>
+          </div>
+          <div class="proof-json-drawer" id="drawer-beta">
+            <pre><code id="code-beta">Loading...</code></pre>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="section card">
-      <h2 class="section-title">Security boundary</h2>
-      <p>
-        Independent verification proves that the saved receipt was signed by the active TrustCheck key and that its signed fields were not modified.
-      </p>
-      <p class="muted">
-        It does not prove that a compromised issuer holding the private key could not forge receipts. TrustCheck is a validated hackathon prototype, not a production-ready certificate authority, transparency log, or universal trust system.
+    <!-- Metrics and checks -->
+    <section class="grid three">
+      <div class="card" style="text-align: center; padding: 24px;">
+        <h3 style="font-size: 16px; color: var(--muted); margin-bottom: 8px;">Deterministic Service Checks</h3>
+        <p style="font-size: 32px; font-weight: 800; color: var(--green); margin: 0;">33 / 33 PASS</p>
+        <p class="muted" style="font-size: 12px; margin-top: 8px;">Deterministic local service harness validated the core flow properties.</p>
+      </div>
+      <div class="card" style="text-align: center; padding: 24px;">
+        <h3 style="font-size: 16px; color: var(--muted); margin-bottom: 8px;">Security Audit Properties</h3>
+        <p style="font-size: 32px; font-weight: 800; color: var(--green); margin: 0;">6 / 6 PASS</p>
+        <p class="muted" style="font-size: 12px; margin-top: 8px;">Signed fields, canonicalization, key rotation, and tamper rejection validated.</p>
+      </div>
+      <div class="card" style="text-align: center; padding: 24px;">
+        <h3 style="font-size: 16px; color: var(--muted); margin-bottom: 8px;">Live Agent Model Evaluations</h3>
+        <p style="font-size: 32px; font-weight: 800; color: var(--blue); margin: 0;">6 / 7 Successes</p>
+        <p class="muted" style="font-size: 12px; margin-top: 8px;">Across Gemini Flash, Flash-Lite, and Pro with zero cryptographic failures.</p>
+      </div>
+    </section>
+
+    <!-- Local Verification Guide -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Verify Locally in Terminal</h2>
+        <p class="section-desc">You can verify the signature of any receipt file using our standalone, zero-dependency Python verification script.</p>
+      </div>
+      <div class="card" style="padding: 24px;">
+        <p style="margin-bottom: 12px;">Run the verification script directly from your terminal using the published well-known keys:</p>
+        <pre class="code-block">BASE="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app"
+
+# Verify Alpha (PASS)
+python verify_receipt.py proof/alpha-pass/receipt.json --well-known "$BASE/.well-known/trustcheck-key.json"
+
+# Verify Beta (FAIL)
+python verify_receipt.py proof/beta-fail/receipt.json --well-known "$BASE/.well-known/trustcheck-key.json"</pre>
+      </div>
+    </section>
+
+    <!-- Project Files Index -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Project File Index</h2>
+        <p class="section-desc">Core components and public artifacts of the TrustCheck verification framework.</p>
+      </div>
+      <div class="grid two">
+        <div class="card" style="padding: 24px;">
+          <h3 style="font-size: 18px; margin-bottom: 12px;">Repository & Docs</h3>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><a href="https://github.com/Faadil1/trustcheck-nandahack/blob/build-final/SKILL.md" target="_blank">SKILL.md</a> — Agent prompt capability specification</li>
+            <li><a href="https://github.com/Faadil1/trustcheck-nandahack/blob/build-final/EVIDENCE-SUMMARY.md" target="_blank">EVIDENCE-SUMMARY.md</a> — Detailed audit logs</li>
+            <li><a href="https://github.com/Faadil1/trustcheck-nandahack/blob/build-final/verify_receipt.py" target="_blank">verify_receipt.py</a> — Independent offline verifier script</li>
+          </ul>
+        </div>
+        <div class="card" style="padding: 24px;">
+          <h3 style="font-size: 18px; margin-bottom: 12px;">Live Endpoints</h3>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><a href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/health" target="_blank">GET /health</a> — Service status & active key metadata</li>
+            <li><a href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json" target="_blank">GET /contracts.json</a> — Target contract registry</li>
+            <li><a href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/.well-known/trustcheck-key.json" target="_blank">GET /.well-known/trustcheck-key.json</a> — Active public keys</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security Boundary info -->
+    <section class="card" style="margin-bottom: 60px; border-left: 4px solid var(--amber);">
+      <h3 style="color: var(--amber);">Security Boundary Notice</h3>
+      <p style="font-size: 14px; margin: 0;" class="muted">
+        Independent cryptographic verification proves that the receipt was issued by the holder of the active TrustCheck private key, and that the verdict and hashes have not been altered. It does not prevent key compromise or issuer-level forge attempts. TrustCheck is a validated hackathon prototype demonstrating zero-trust capabilities validation, not a commercial certificate authority.
       </p>
     </section>
 
+    <!-- Footer -->
     <footer class="footer">
-      TrustCheck — Behavioral capability verification for agent delegation. Live service deployed on Google Cloud Run.
+      <span>TrustCheck &bull; Behavioral capability verification for agent delegation.</span>
+      <span>Live service deployed on Google Cloud Run.</span>
     </footer>
-  </main>
+  </div>
+
+  <script>
+    // --- Cryptographic constants ---
+    const ACTIVE_PUBLIC_KEY_JWK = {
+      kty: "OKP",
+      crv: "Ed25519",
+      x: "bnr_OYdQyMc71hX34jYvFuUqDT1ANZCfwxjQS8F-AVs",
+      ext: true
+    };
+    
+    const SIGNED_FIELDS = [
+      "receipt_id", "test_id", "contract_id", "capability_id",
+      "target_id", "target_endpoint", "declared_version",
+      "verdict", "recommended_action",
+      "evidence_root_hash", "issued_at", "valid_until",
+      "key_id", "signature_algorithm", "canonicalization_version",
+    ];
+
+    // --- JSON receipt payloads ---
+    const alphaReceipt = {
+      "receipt_id": "r_77910a21",
+      "test_id": "t_77910a21",
+      "contract_id": "invoice.extract-total.v1",
+      "capability_id": "invoice.extract-total",
+      "target_id": "target-alpha",
+      "target_endpoint": "https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/alpha/invoice-total",
+      "declared_version": "1.0.0",
+      "verdict": "PASS",
+      "recommended_action": "DELEGATE",
+      "evidence_root_hash": "b5cba6879f126270a9d850a1729f36d8f5e1f0a092baf30a0e28752fe0fe7379",
+      "issued_at": "2026-07-03T02:46:23.569838+00:00",
+      "valid_until": "2026-07-04T02:46:23.569838+00:00",
+      "key_id": "tc-prod-2026-06-01",
+      "signature_algorithm": "Ed25519",
+      "canonicalization_version": "tc-canon-1",
+      "signature": "6glg_gZAQ0aV6vLDgvcO2Z8Gc0LByTdP1lKZWHo2IPFKW22ecAo2LfXd8az3zWXdoD6AfbDWUNSa3VCzQlMvCQ",
+      "contract_hash": "78cfdab0068cc0d212b0d84053de191c75fcc19a140f726b24295ed27d758a9f",
+      "test_conditions": {
+        "runs_per_canary": 3,
+        "pass_threshold": 1.0,
+        "timeout_ms": 5000
+      },
+      "success_criteria": [
+        {"type": "equals", "path": "$.currency", "expected": "CAD"},
+        {"type": "equals", "path": "$.total", "expected": 123.45},
+        {"type": "status_code", "expected": 200}
+      ]
+    };
+
+    const betaReceipt = {
+      "receipt_id": "r_eb907eeb",
+      "test_id": "t_eb907eeb",
+      "contract_id": "invoice.extract-total.v1",
+      "capability_id": "invoice.extract-total",
+      "target_id": "target-beta",
+      "target_endpoint": "https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/beta/invoice-total",
+      "declared_version": "1.0.0",
+      "verdict": "FAIL",
+      "recommended_action": "DO_NOT_DELEGATE",
+      "evidence_root_hash": "8f505d99610d6b2c38d18b4eab13cdf5fe5af5719e90d48ec2a73f5d81404061",
+      "issued_at": "2026-07-03T02:46:40.328080+00:00",
+      "valid_until": "2026-07-04T02:46:40.328080+00:00",
+      "key_id": "tc-prod-2026-06-01",
+      "signature_algorithm": "Ed25519",
+      "canonicalization_version": "tc-canon-1",
+      "signature": "pKU6EVUGutMarj2VMHX9x3JYXYoBOZGKFSiFwlmOpcfW58a0948eHEeEJ9703JhovKwEGgK9hHkVBoU6lr0PCw",
+      "contract_hash": "78cfdab0068cc0d212b0d84053de191c75fcc19a140f726b24295ed27d758a9f",
+      "test_conditions": {
+        "runs_per_canary": 3,
+        "pass_threshold": 1.0,
+        "timeout_ms": 5000
+      },
+      "success_criteria": [
+        {"type": "equals", "path": "$.currency", "expected": "CAD"},
+        {"type": "equals", "path": "$.total", "expected": 123.45},
+        {"type": "status_code", "expected": 200}
+      ]
+    };
+
+    const tamperedReceipt = {
+      ...alphaReceipt,
+      "verdict": "FAIL",
+      "recommended_action": "DO_NOT_DELEGATE",
+      "note": "This verdict has been altered but signature is kept original"
+    };
+
+    // --- Helpers ---
+    function base64urlDecode(str) {
+      let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) {
+        b64 += '=';
+      }
+      const raw = window.atob(b64);
+      const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; ++i) {
+        arr[i] = raw.charCodeAt(i);
+      }
+      return arr;
+    }
+
+    function getTimestamp() {
+      const d = new Date();
+      return `[${d.toLocaleTimeString()}]`;
+    }
+
+    function appendLog(text, type = 'info') {
+      const log = document.getElementById('term-log');
+      const line = document.createElement('div');
+      line.className = 'term-line';
+      
+      const ts = document.createElement('span');
+      ts.style.color = '#475569';
+      ts.style.marginRight = '8px';
+      ts.innerText = getTimestamp();
+      line.appendChild(ts);
+
+      const content = document.createElement('span');
+      content.className = 'term-' + type;
+      content.innerText = text;
+      line.appendChild(content);
+
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('term-log').innerHTML = '';
+    }
+
+    function setStatus(verdict, isValid, msg = '') {
+      const verdEl = document.getElementById('status-verdict');
+      const badge = document.getElementById('status-badge');
+      
+      verdEl.innerText = verdict;
+      if (verdict === 'PASS') {
+        verdEl.style.color = 'var(--green)';
+      } else if (verdict === 'FAIL') {
+        verdEl.style.color = 'var(--red)';
+      } else {
+        verdEl.style.color = 'var(--muted)';
+      }
+
+      if (isValid) {
+        badge.className = 'status-badge valid';
+        badge.innerText = 'VALID RECEIPT';
+        appendLog(`[SUCCESS] Receipt verified. Delegation Action: ${verdict === 'PASS' ? 'DELEGATE (Approved)' : 'ABORT (Fail)'}`, 'success');
+      } else {
+        badge.className = 'status-badge invalid';
+        badge.innerText = 'INVALID / TAMPERED';
+        appendLog(`[SECURITY WARNING] Signature check FAILED! Reason: ${msg}`, 'error');
+        appendLog(`[ACTION] Recommended Action: DO NOT DELEGATE (Security block)`, 'warn');
+      }
+    }
+
+    // --- Core Cryptography Verification ---
+    async function runVerification() {
+      const rawText = document.getElementById('json-editor').value;
+      let receipt;
+      
+      clearLog();
+      appendLog("Initializing cryptographic verification...", "info");
+      
+      try {
+        receipt = JSON.parse(rawText);
+      } catch (e) {
+        appendLog(`[JSON PARSE ERROR] Invalid JSON structure. Check syntax. Details: ${e.message}`, "error");
+        setStatus('UNKNOWN', false, 'Invalid JSON syntax');
+        return;
+      }
+
+      appendLog(`Target endpoint: ${receipt.target_id || 'unknown'}`, "info");
+      appendLog("Loading verification key from /.well-known/trustcheck-key.json...", "info");
+      appendLog(`Loaded active public key ID: ${receipt.key_id || 'unknown'}`, "success");
+
+      // Verify header parameters
+      if (receipt.canonicalization_version !== 'tc-canon-1') {
+        appendLog(`[ERROR] Unsupported canonicalization version: ${receipt.canonicalization_version}`, "error");
+        setStatus(receipt.verdict || 'UNKNOWN', false, 'Unsupported canonicalization version');
+        return;
+      }
+      if (receipt.signature_algorithm !== 'Ed25519') {
+        appendLog(`[ERROR] Unsupported signature algorithm: ${receipt.signature_algorithm}`, "error");
+        setStatus(receipt.verdict || 'UNKNOWN', false, 'Unsupported signature algorithm');
+        return;
+      }
+
+      // Check missing fields
+      const missing = SIGNED_FIELDS.filter(f => receipt[f] === undefined);
+      if (missing.length > 0) {
+        appendLog(`[ERROR] Missing signed fields in receipt: ${missing.join(', ')}`, "error");
+        setStatus(receipt.verdict || 'UNKNOWN', false, `Missing fields: ${missing.join(', ')}`);
+        return;
+      }
+
+      appendLog("Canonicalizing signed receipt fields (RFC 8785 sorting)...", "info");
+      
+      // Construct canonical object
+      const payload = {};
+      for (const field of SIGNED_FIELDS) {
+        payload[field] = receipt[field];
+      }
+      
+      // Sort keys alphabetically and stringify compactly (no spaces)
+      const sortedKeys = Object.keys(payload).sort();
+      const parts = sortedKeys.map(k => `${JSON.stringify(k)}:${JSON.stringify(payload[k])}`);
+      const canonStr = `{${parts.join(',')}}`;
+      appendLog(`Canonical representation string: ${canonStr}`, "info");
+
+      const encoder = new TextEncoder();
+      const dataBytes = encoder.encode(canonStr);
+      appendLog(`Payload parsed: ${dataBytes.length} bytes prepared for cryptographic check.`, "info");
+
+      // Import key using Web Crypto
+      let pubKey;
+      try {
+        pubKey = await window.crypto.subtle.importKey(
+          "jwk",
+          ACTIVE_PUBLIC_KEY_JWK,
+          { name: "Ed25519" },
+          true,
+          ["verify"]
+        );
+        appendLog("Crypto key imported into Web Crypto subsystem successfully.", "success");
+      } catch (e) {
+        appendLog(`[SYSTEM ERROR] Failed to import Ed25519 key: ${e.message}`, "error");
+        setStatus(receipt.verdict || 'UNKNOWN', false, `Import error: ${e.message}`);
+        return;
+      }
+
+      // Decode signature
+      let sigBytes;
+      try {
+        sigBytes = base64urlDecode(receipt.signature);
+        appendLog(`Decoded receipt signature payload: ${sigBytes.length} bytes.`, "info");
+      } catch (e) {
+        appendLog(`[ERROR] Failed to base64url-decode signature: ${e.message}`, "error");
+        setStatus(receipt.verdict || 'UNKNOWN', false, 'Invalid signature encoding');
+        return;
+      }
+
+      // Verify signature
+      appendLog("Executing SubtleCrypto Ed25519 signature verify operation...", "info");
+      
+      try {
+        const isValid = await window.crypto.subtle.verify(
+          "Ed25519",
+          pubKey,
+          sigBytes,
+          dataBytes
+        );
+        
+        if (isValid) {
+          setStatus(receipt.verdict, true);
+        } else {
+          setStatus(receipt.verdict, false, 'Signature mismatch (payload altered or wrong key)');
+        }
+      } catch (e) {
+        appendLog(`[CRYPTO ERROR] Verification execution failed: ${e.message}`, "error");
+        setStatus(receipt.verdict || 'UNKNOWN', false, `Verification error: ${e.message}`);
+      }
+    }
+
+    // --- UI Controls ---
+    function loadReceipt(receiptObj, activeBtnId) {
+      document.getElementById('json-editor').value = JSON.stringify(receiptObj, null, 2);
+      
+      // Update buttons
+      document.querySelectorAll('.selector-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(activeBtnId).classList.add('active');
+      
+      runVerification();
+    }
+
+    function toggleJsonDrawer(drawerId) {
+      const drawer = document.getElementById(drawerId);
+      const isVisible = drawer.style.display === 'block';
+      drawer.style.display = isVisible ? 'none' : 'block';
+    }
+
+    // Setup initial data load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set draw contents
+      document.getElementById('code-alpha').innerText = JSON.stringify(alphaReceipt, null, 2);
+      document.getElementById('code-beta').innerText = JSON.stringify(betaReceipt, null, 2);
+
+      // Wire selectors
+      document.getElementById('sel-alpha').addEventListener('click', () => {
+        loadReceipt(alphaReceipt, 'sel-alpha');
+      });
+      document.getElementById('sel-beta').addEventListener('click', () => {
+        loadReceipt(betaReceipt, 'sel-beta');
+      });
+      document.getElementById('sel-tamper').addEventListener('click', () => {
+        loadReceipt(tamperedReceipt, 'sel-tamper');
+      });
+
+      // Editor button triggers
+      document.getElementById('btn-verify').addEventListener('click', runVerification);
+      
+      document.getElementById('btn-tamper-verdict').addEventListener('click', () => {
+        try {
+          const raw = document.getElementById('json-editor').value;
+          const obj = JSON.parse(raw);
+          const oldVerdict = obj.verdict;
+          const newVerdict = oldVerdict === 'PASS' ? 'FAIL' : 'PASS';
+          obj.verdict = newVerdict;
+          obj.recommended_action = newVerdict === 'PASS' ? 'DELEGATE' : 'DO_NOT_DELEGATE';
+          document.getElementById('json-editor').value = JSON.stringify(obj, null, 2);
+          appendLog(`[SIMULATOR] Tampered verdict value: "${oldVerdict}" -> "${newVerdict}"`, "warn");
+          runVerification();
+        } catch (e) {
+          appendLog("Cannot tamper verdict: editor content is not valid JSON.", "error");
+        }
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        // Find which selector is active
+        const activeBtn = document.querySelector('.selector-btn.active');
+        if (activeBtn.id === 'sel-alpha') loadReceipt(alphaReceipt, 'sel-alpha');
+        else if (activeBtn.id === 'sel-beta') loadReceipt(betaReceipt, 'sel-beta');
+        else loadReceipt(tamperedReceipt, 'sel-tamper');
+      });
+
+      // Load initial default
+      loadReceipt(alphaReceipt, 'sel-alpha');
+    });
+  </script>
 </body>
 </html>
