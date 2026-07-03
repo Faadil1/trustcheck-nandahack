@@ -1,0 +1,14 @@
+{
+  "issuer": "https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app",
+  "canonicalization_version": "tc-canon-1",
+  "signature_algorithm": "Ed25519",
+  "active_key": {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "x": "bnr_OYdQyMc71hX34jYvFuUqDT1ANZCfwxjQS8F-AVs",
+    "kid": "tc-prod-2026-06-01",
+    "status": "active"
+  },
+  "previous_keys": [],
+  "revoked_keys": []
+}

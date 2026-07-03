@@ -1,0 +1,56 @@
+{
+  "receipt_id": "r_eb907eeb",
+  "test_id": "t_eb907eeb",
+  "contract_id": "invoice.extract-total.v1",
+  "capability_id": "invoice.extract-total",
+  "target_id": "target-beta",
+  "target_endpoint": "https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/beta/invoice-total",
+  "declared_version": "1.0.0",
+  "verdict": "PASS",
+  "recommended_action": "DO_NOT_DELEGATE",
+  "evidence_root_hash": "8f505d99610d6b2c38d18b4eab13cdf5fe5af5719e90d48ec2a73f5d81404061",
+  "issued_at": "2026-07-03T02:46:40.328080+00:00",
+  "valid_until": "2026-07-04T02:46:40.328080+00:00",
+  "key_id": "tc-prod-2026-06-01",
+  "signature_algorithm": "Ed25519",
+  "canonicalization_version": "tc-canon-1",
+  "signature": "pKU6EVUGutMarj2VMHX9x3JYXYoBOZGKFSiFwlmOpcfW58a0948eHEeEJ9703JhovKwEGgK9hHkVBoU6lr0PCw",
+  "contract_hash": "78cfdab0068cc0d212b0d84053de191c75fcc19a140f726b24295ed27d758a9f",
+  "test_conditions": {
+    "runs_per_canary": 3,
+    "pass_threshold": 1.0,
+    "timeout_ms": 5000
+  },
+  "success_criteria": [
+    {
+      "type": "equals",
+      "path": "$.currency",
+      "expected": "CAD"
+    },
+    {
+      "type": "equals",
+      "path": "$.total",
+      "expected": 123.45
+    },
+    {
+      "type": "status_code",
+      "expected": 200
+    }
+  ],
+  "latency_ms": {
+    "p50": 31.73,
+    "max": 32.1
+  },
+  "limitations": [
+    "Behavioral test of one declared capability only.",
+    "Does not verify identity or schema legitimacy (consume NANDA AgentFacts).",
+    "Verdict valid only until valid_until; re-test after expiry.",
+    "Ed25519 signature covers all security-relevant fields and is independently verifiable via /.well-known/trustcheck-key.json."
+  ],
+  "hmac_signature_DEPRECATED": "1b408cf12b7253ec328176f61a78c47d77e4c2960fc1912b3881ab93b0c7bfcf",
+  "verification": {
+    "method": "Ed25519",
+    "key_endpoint": "https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/.well-known/trustcheck-key.json",
+    "note": "HMAC verification is deprecated; verify the Ed25519 signature."
+  }
+}
