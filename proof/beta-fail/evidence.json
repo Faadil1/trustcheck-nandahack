@@ -1,0 +1,182 @@
+{
+  "test_id": "t_eb907eeb",
+  "entries": [
+    {
+      "run": 1,
+      "request": {
+        "method": "POST",
+        "endpoint": "https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/beta/invoice-total",
+        "body": {
+          "invoice": {
+            "subtotal": 110.0,
+            "tax": 13.45,
+            "currency": "CAD"
+          }
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json",
+          "server": "Google Frontend"
+        },
+        "body": {
+          "currency": "CAD",
+          "total": 110.0
+        },
+        "raw_body_sha256": "1b686f714b4b1261dbd66f610d13002566dbfdd25503d21c509a8e8f133386ab",
+        "transport": "ok",
+        "error": null
+      },
+      "latency_ms": 31.73,
+      "predicate_results": [
+        {
+          "predicate": {
+            "type": "equals",
+            "path": "$.currency",
+            "expected": "CAD"
+          },
+          "observed": "CAD",
+          "passed": true
+        },
+        {
+          "predicate": {
+            "type": "equals",
+            "path": "$.total",
+            "expected": 123.45
+          },
+          "observed": 110.0,
+          "passed": false
+        },
+        {
+          "predicate": {
+            "type": "status_code",
+            "expected": 200
+          },
+          "observed": 200,
+          "passed": true
+        }
+      ],
+      "run_passed": false,
+      "entry_hash": "b0d2642aa66124b085e98f40bc589cbdf41b3cbf2000c4b46cdb5a7fe27231e0"
+    },
+    {
+      "run": 2,
+      "request": {
+        "method": "POST",
+        "endpoint": "https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/beta/invoice-total",
+        "body": {
+          "invoice": {
+            "subtotal": 110.0,
+            "tax": 13.45,
+            "currency": "CAD"
+          }
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json",
+          "server": "Google Frontend"
+        },
+        "body": {
+          "currency": "CAD",
+          "total": 110.0
+        },
+        "raw_body_sha256": "1b686f714b4b1261dbd66f610d13002566dbfdd25503d21c509a8e8f133386ab",
+        "transport": "ok",
+        "error": null
+      },
+      "latency_ms": 30.53,
+      "predicate_results": [
+        {
+          "predicate": {
+            "type": "equals",
+            "path": "$.currency",
+            "expected": "CAD"
+          },
+          "observed": "CAD",
+          "passed": true
+        },
+        {
+          "predicate": {
+            "type": "equals",
+            "path": "$.total",
+            "expected": 123.45
+          },
+          "observed": 110.0,
+          "passed": false
+        },
+        {
+          "predicate": {
+            "type": "status_code",
+            "expected": 200
+          },
+          "observed": 200,
+          "passed": true
+        }
+      ],
+      "run_passed": false,
+      "entry_hash": "b882d8ac2fd6e368a6513104dd0da0cb399e2c7b83ad418232eb3f5f1d4582bc"
+    },
+    {
+      "run": 3,
+      "request": {
+        "method": "POST",
+        "endpoint": "https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/targets/beta/invoice-total",
+        "body": {
+          "invoice": {
+            "subtotal": 110.0,
+            "tax": 13.45,
+            "currency": "CAD"
+          }
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json",
+          "server": "Google Frontend"
+        },
+        "body": {
+          "currency": "CAD",
+          "total": 110.0
+        },
+        "raw_body_sha256": "1b686f714b4b1261dbd66f610d13002566dbfdd25503d21c509a8e8f133386ab",
+        "transport": "ok",
+        "error": null
+      },
+      "latency_ms": 32.1,
+      "predicate_results": [
+        {
+          "predicate": {
+            "type": "equals",
+            "path": "$.currency",
+            "expected": "CAD"
+          },
+          "observed": "CAD",
+          "passed": true
+        },
+        {
+          "predicate": {
+            "type": "equals",
+            "path": "$.total",
+            "expected": 123.45
+          },
+          "observed": 110.0,
+          "passed": false
+        },
+        {
+          "predicate": {
+            "type": "status_code",
+            "expected": 200
+          },
+          "observed": 200,
+          "passed": true
+        }
+      ],
+      "run_passed": false,
+      "entry_hash": "185f39616995d0dadba83dbde498b7e89260a44a4adb831d43aa50d9dfc72074"
+    }
+  ]
+}

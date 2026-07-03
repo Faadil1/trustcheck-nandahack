@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TrustCheck — Behavioral Verification for Agent Delegation</title>
+  <meta name="description" content="TrustCheck verifies claimed agent capabilities through real HTTP canary tests and independently verifiable Ed25519 receipts.">
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #111824;
+      --panel-2: #151f2e;
+      --text: #f4f7fb;
+      --muted: #a8b3c5;
+      --line: #273244;
+      --green: #4ade80;
+      --red: #fb7185;
+      --blue: #60a5fa;
+      --amber: #f59e0b;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 35%),
+        radial-gradient(circle at top right, rgba(74, 222, 128, 0.08), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 40px 20px 64px;
+    }
+
+    .hero {
+      padding: 56px 0 36px;
+    }
+
+    .badge {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 16px rgba(74, 222, 128, 0.9);
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0 0 20px;
+      font-size: clamp(42px, 7vw, 78px);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+    }
+
+    .subtitle {
+      max-width: 840px;
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: clamp(18px, 2.4vw, 24px);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .btn.primary {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.18);
+    }
+
+    .card h2, .card h3 {
+      margin-top: 0;
+      line-height: 1.15;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .section {
+      margin-top: 34px;
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .step {
+      min-height: 92px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .step span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    .result {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 14px 0;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid var(--line);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .pill.green {
+      background: rgba(74, 222, 128, 0.14);
+      color: var(--green);
+    }
+
+    .pill.red {
+      background: rgba(251, 113, 133, 0.14);
+      color: var(--red);
+    }
+
+    .pill.blue {
+      background: rgba(96, 165, 250, 0.14);
+      color: var(--blue);
+    }
+
+    .pill.amber {
+      background: rgba(245, 158, 11, 0.14);
+      color: var(--amber);
+    }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #070a0f;
+      color: #d7e1f0;
+      font-size: 13px;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    .footer {
+      margin-top: 42px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .grid.two, .grid.three, .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="badge"><span class="dot"></span> Live Cloud Run service · Ed25519 receipts · Tamper rejection proven</div>
+      <h1>TrustCheck verifies before agents delegate.</h1>
+      <p class="subtitle">
+        A zero-trust behavioral verification layer for agent delegation. TrustCheck turns a capability claim into real HTTP canary tests, signed evidence, and an independently verifiable receipt.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary" href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/health">Live Health</a>
+        <a class="btn" href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json">View Contract</a>
+        <a class="btn" href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/.well-known/trustcheck-key.json">Public Key</a>
+        <a class="btn" href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof">Proof Bundle</a>
+      </div>
+    </section>
+
+    <section class="section grid two">
+      <div class="card">
+        <h2>What it is</h2>
+        <p>
+          TrustCheck verifies whether a consented target can actually perform one declared capability before another agent delegates consequential work.
+        </p>
+        <p class="muted">
+          The invoice-total capability is the Hello World demonstration. The product is the verification pattern.
+        </p>
+      </div>
+      <div class="card">
+        <h2>What it is not</h2>
+        <ul class="muted">
+          <li>Not identity verification.</li>
+          <li>Not AgentFacts schema validation.</li>
+          <li>Not a reputation system.</li>
+          <li>Not a universal trust score.</li>
+          <li>Not production-ready security infrastructure.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section card">
+      <h2 class="section-title">Verification flow</h2>
+      <p class="muted">The same pattern can generalize to any capability that can be expressed as a contract, canaries, predicates, evidence, and a signed receipt.</p>
+      <div class="flow">
+        <div class="step">Claim<span>Target says it can do a task</span></div>
+        <div class="step">Contract<span>Machine-readable behavioral spec</span></div>
+        <div class="step">HTTP Test<span>Real canary calls to target</span></div>
+        <div class="step">Evidence<span>Outputs, predicates, hashes</span></div>
+        <div class="step">Receipt<span>Ed25519 signed result</span></div>
+        <div class="step">Verify<span>Independent public-key check</span></div>
+        <div class="step">Decision<span>Delegate or do not delegate</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Live proof cards</h2>
+      <div class="grid two">
+        <div class="card">
+          <span class="pill green">ALPHA</span>
+          <h3>target-alpha</h3>
+          <p class="muted">The target satisfies the published invoice-total contract.</p>
+          <div class="result"><strong>Verdict</strong><span class="pill green">PASS</span></div>
+          <div class="result"><strong>Decision</strong><span class="pill blue">DELEGATE</span></div>
+          <div class="result"><strong>Receipt</strong><span class="pill green">VALID</span></div>
+          <div class="result"><strong>Tampered copy</strong><span class="pill red">REJECTED</span></div>
+          <p><a href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof/alpha-pass">Open Alpha proof</a></p>
+        </div>
+
+        <div class="card">
+          <span class="pill red">BETA</span>
+          <h3>target-beta</h3>
+          <p class="muted">The target responds, but fails the published invoice-total contract.</p>
+          <div class="result"><strong>Verdict</strong><span class="pill red">FAIL</span></div>
+          <div class="result"><strong>Decision</strong><span class="pill amber">DO_NOT_DELEGATE</span></div>
+          <div class="result"><strong>Receipt</strong><span class="pill green">VALID</span></div>
+          <div class="result"><strong>Tampered copy</strong><span class="pill red">REJECTED</span></div>
+          <p><a href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof/beta-fail">Open Beta proof</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section grid three">
+      <div class="card">
+        <h3>Service checks</h3>
+        <p class="pill green">33/33 PASS</p>
+        <p class="muted">Deterministic local service harness validated the core flow.</p>
+      </div>
+      <div class="card">
+        <h3>Security audit</h3>
+        <p class="pill green">6/6 PASS</p>
+        <p class="muted">Signed fields, canonicalization, key handling, and tamper rejection verified.</p>
+      </div>
+      <div class="card">
+        <h3>Live model evals</h3>
+        <p class="pill blue">6 successes / 7 attempts</p>
+        <p class="muted">Across three Gemini model configurations, with one formatting-only retry.</p>
+      </div>
+    </section>
+
+    <section class="section card">
+      <h2 class="section-title">Verify locally</h2>
+      <p class="muted">Authentic receipts should return <code>"valid": true</code>. Tampered copies should return <code>"valid": false</code>.</p>
+      <pre>BASE="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app"
+
+python verify_receipt.py proof/alpha-pass/receipt.json \
+  --well-known "$BASE/.well-known/trustcheck-key.json"
+
+python verify_receipt.py proof/beta-fail/receipt.json \
+  --well-known "$BASE/.well-known/trustcheck-key.json"</pre>
+    </section>
+
+    <section class="section card">
+      <h2 class="section-title">Project files</h2>
+      <div class="grid two">
+        <ul>
+          <li><a href="https://github.com/Faadil1/trustcheck-nandahack/blob/build-final/SKILL.md">SKILL.md</a></li>
+          <li><a href="https://github.com/Faadil1/trustcheck-nandahack/blob/build-final/EVIDENCE-SUMMARY.md">EVIDENCE-SUMMARY.md</a></li>
+          <li><a href="https://github.com/Faadil1/trustcheck-nandahack/tree/build-final/proof">proof/</a></li>
+          <li><a href="https://github.com/Faadil1/trustcheck-nandahack/blob/build-final/verify_receipt.py">verify_receipt.py</a></li>
+        </ul>
+        <ul>
+          <li><a href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/health">/health</a></li>
+          <li><a href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/contracts.json">/contracts.json</a></li>
+          <li><a href="https://trustcheck-nandahack-293749289787.northamerica-northeast1.run.app/.well-known/trustcheck-key.json">/.well-known/trustcheck-key.json</a></li>
+          <li><a href="https://github.com/Faadil1/trustcheck-nandahack">GitHub repository</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section card">
+      <h2 class="section-title">Security boundary</h2>
+      <p>
+        Independent verification proves that the saved receipt was signed by the active TrustCheck key and that its signed fields were not modified.
+      </p>
+      <p class="muted">
+        It does not prove that a compromised issuer holding the private key could not forge receipts. TrustCheck is a validated hackathon prototype, not a production-ready certificate authority, transparency log, or universal trust system.
+      </p>
+    </section>
+
+    <footer class="footer">
+      TrustCheck — Behavioral capability verification for agent delegation. Live service deployed on Google Cloud Run.
+    </footer>
+  </main>
+</body>
+</html>

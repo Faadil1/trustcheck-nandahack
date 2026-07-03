@@ -1,0 +1,10 @@
+{
+  "receipt_id": "r_eb907eeb",
+  "verdict": "PASS",
+  "key_id": "tc-prod-2026-06-01",
+  "valid": false,
+  "reasons": [
+    "signature verification failed (payload altered or wrong key)"
+  ],
+  "key_status": "active"
+}
